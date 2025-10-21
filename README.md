@@ -79,7 +79,7 @@
 docker run -d \
   --name awembypush \
   --restart unless-stopped \
-  -p 8000:8000 \
+    -p 8000:8000 \
   -e TMDB_API_TOKEN=你的TMDB_TOKEN \
   -e TG_BOT_TOKEN=你的TG_BOT_TOKEN \
   -e TG_CHAT_ID=你的TG_CHAT_ID \
@@ -128,6 +128,7 @@ services:
       # 高级配置（可选）- 反代和电视剧集合并
       - TG_API_HOST=https://api.telegram.org  # Telegram API 反代地址
       - TMDB_API_HOST=https://api.themoviedb.org  # TMDB API 反代地址
+      - TMDB_IMAGE_DOMAIN=https://image.tmdb.org  # TMDB 图片加速源
       - EPISODE_CACHE_TIMEOUT=30  # 电视剧集缓存时间（秒）
 ```
 
@@ -209,6 +210,7 @@ docker-compose up -d
 |------|------|--------|
 | `TG_API_HOST` | 🆕 Telegram API 反代地址 | `https://api.telegram.org` |
 | `TMDB_API_HOST` | 🆕 TMDB API 反代地址 | `https://api.themoviedb.org` |
+| `TMDB_IMAGE_DOMAIN` | TMDB 图片加速源 | `https://image.tmdb.org` |
 | `EPISODE_CACHE_TIMEOUT` | 🆕 电视剧集缓存时间（秒） | `30` |
 
 <details>
@@ -218,6 +220,11 @@ docker-compose up -d
 - 如果您在国内访问 Telegram 或 TMDB 遇到网络问题，可以配置反代地址
 - 例如：`TG_API_HOST=https://your-tg-proxy.com`
 - 例如：`TMDB_API_HOST=https://your-tmdb-proxy.com`
+
+**TMDB 图片加速**
+- TMDB 图片默认从 `https://image.tmdb.org` 加载
+- 国内访问较慢，可配置加速源：`TMDB_IMAGE_DOMAIN=https://static-mdb.v.geilijiasu.com`
+- 或使用其他 TMDB 图片 CDN 加速服务
 
 **电视剧集合并推送**
 - 当短时间内添加同一电视剧的多集时，系统会自动合并推送
@@ -240,14 +247,14 @@ docker-compose up -d
 
 进入 **Emby Server 控制台** → **设置** → **通知** → **添加 Webhooks**
 
-![添加通知](./doc/添加通知.png)
+    ![添加通知](./doc/添加通知.png)
 
 #### 2️⃣ 配置 Webhooks URL
 
 - **Webhook URL**: `http://你的服务器IP:8000`
 - **数据类型**: `application/json`
 
-![配置Webhooks](./doc/配置notifier.png)
+    ![配置Webhooks](./doc/配置notifier.png)
 
 #### 3️⃣ 测试连接
 
@@ -256,8 +263,8 @@ docker-compose up -d
 ![接收测试消息](./doc/接受测试消息.png)
 
 ```log
-[WARNING] : Unsupported event type: system.notificationtest
-```
+     [WARNING] : Unsupported event type: system.notificationtest
+    ```
 
 #### 4️⃣ 选择通知事件
 
@@ -276,21 +283,21 @@ docker-compose up -d
 
 进入 **Jellyfin 控制台** → **插件** → 搜索并安装 **Webhooks**
 
-![Jellyfin Webhooks](./doc/设置webhook.png)
+    ![Jellyfin Webhooks](./doc/设置webhook.png)
 
 #### 2️⃣ 添加 Generic Destination
 
-![添加类型](./doc/选择generic_destination.png)
+    ![添加类型](./doc/选择generic_destination.png)
 
 #### 3️⃣ 配置 Webhook
-
-![配置Generic Destination](./doc/配置.png)
+  
+    ![配置Generic Destination](./doc/配置.png)
 
 #### 4️⃣ 启用通知
 
-![通知配置](./doc/通知设置.png)
+    ![通知配置](./doc/通知设置.png)
 
-![启用通知](./doc/启用通知.png)
+    ![启用通知](./doc/启用通知.png)
 
 </details>
 

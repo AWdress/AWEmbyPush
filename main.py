@@ -63,6 +63,7 @@ def env_check():
     print("\n━━━━━━━━ 📊 媒体数据库配置 ━━━━━━━━")
     print(f"{'TMDB_API_TOKEN:':<25} {'[必需]':<8} {os.getenv('TMDB_API_TOKEN', '❌ 未配置')}")
     print(f"{'TMDB_API_HOST:':<25} {'[可选]':<8} {os.getenv('TMDB_API_HOST', 'https://api.themoviedb.org')}")
+    print(f"{'TMDB_IMAGE_DOMAIN:':<25} {'[可选]':<8} {os.getenv('TMDB_IMAGE_DOMAIN', 'https://image.tmdb.org')}")
     print(f"{'TVDB_API_KEY:':<25} {'[可选]':<8} {os.getenv('TVDB_API_KEY', '⚪ 未配置')}")
     print("\n━━━━━━━━ 📱 Telegram Bot 配置 ━━━━━━━━")
     print(f"{'TG_BOT_TOKEN:':<25} {'[可选]':<8} {os.getenv('TG_BOT_TOKEN', '⚪ 未配置')}")

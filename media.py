@@ -323,9 +323,9 @@ def process_media(emby_media_info):
     if emby_media_info["Event"] != "library.new":
         log.logger.warning(f"Unsupported event type: {emby_media_info['Event']}")
         if emby_media_info["Event"] == "system.notificationtest":
-            log.logger.warning("This is a notification test message. Please check your Telegram chat, if you received a message from AWEmbyPush, it works!")
+            log.logger.warning("📨 这是一条测试通知消息，请检查您的推送渠道，如果收到消息说明配置成功！")
             sender.Sender.send_test_msg(
-                f"🎉 *Congratulations!* 🎉 \n\nAWEmbyPush worked! \n\nThis is a test message from *{emby_media_info['Server']['Name']}*! Now you can try adding a new media item to your Emby Server, whether it is a movie or a TV series~ \n\n{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}"
+                f"🎉 *恭喜！* 🎉 \n\nAWEmbyPush 配置成功！\n\n这是来自 *{emby_media_info['Server']['Name']}* 的测试消息！\n\n现在您可以尝试向 Emby Server 添加新的电影或剧集了~ \n\n发送时间：{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}"
             )
 
         return

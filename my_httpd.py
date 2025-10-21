@@ -6,7 +6,7 @@ import my_utils
 
 
 async def worker(msg_queue):
-    log.logger.info("AWEmbyPush started.")
+    log.logger.info("🚀 AWEmbyPush 服务已启动，正在监听端口 8000...")
     while True:
         msg = await msg_queue.get()  # 从队列中获取消息
         # 在这里进行消息处理，如发送到其他地方或执行其他操作

@@ -48,17 +48,30 @@ class EpisodeCache:
             
             # 多集合并发送
             episodes_sorted = sorted(episodes, key=lambda x: x.get('tv_episode', 0))
-            first_ep = episodes_sorted[0].get('tv_episode')
-            last_ep = episodes_sorted[-1].get('tv_episode')
+            episode_numbers = [ep.get('tv_episode') for ep in episodes_sorted]
+            first_ep = episode_numbers[0]
+            last_ep = episode_numbers[-1]
             
-            # 修改第一个媒体信息，将剧集信息改为范围
+            # 判断剧集是否连续
+            is_continuous = all(
+                episode_numbers[i] + 1 == episode_numbers[i + 1] 
+                for i in range(len(episode_numbers) - 1)
+            )
+            
+            # 修改第一个媒体信息，将剧集信息改为范围或列表
             merged_media = episodes_sorted[0].copy()
-            episode_range = f"{first_ep}-{last_ep}" if first_ep != last_ep else str(first_ep)
+            if is_continuous:
+                # 连续集数：显示为范围 "1-3"
+                episode_range = f"{first_ep}-{last_ep}" if first_ep != last_ep else str(first_ep)
+            else:
+                # 不连续集数：显示为列表 "1,3,5"
+                episode_range = ",".join(str(ep) for ep in episode_numbers)
             
             # 更新剧集信息显示
             merged_media['tv_episode_merged'] = True
             merged_media['tv_episode_range'] = episode_range
             merged_media['tv_episode_count'] = len(episodes)
+            merged_media['tv_episode_continuous'] = is_continuous
             
             log.logger.info(
                 f"📺 合并发送 {len(episodes)} 集：{merged_media.get('media_name')} "

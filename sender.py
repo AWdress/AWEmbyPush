@@ -67,7 +67,11 @@ class TelegramSender(MessageSender):
         
         # 处理合并剧集的显示
         if media.get("tv_episode_merged"):
-            episode_text = f"已更新至 第{media['tv_season']}季 第{media['tv_episode_range']}集 (共{media['tv_episode_count']}集)\n"
+            # 区分连续和不连续集数的显示
+            if media.get("tv_episode_continuous"):
+                episode_text = f"已更新至 第{media['tv_season']}季 第{media['tv_episode_range']}集 (共{media['tv_episode_count']}集)\n"
+            else:
+                episode_text = f"已更新 第{media['tv_season']}季 第{media['tv_episode_range']}集 (共{media['tv_episode_count']}集)\n"
             title = media["media_name"]
         else:
             episode_text = f"已更新至 第{media['tv_season']}季 第{media['tv_episode']}集\n" if media["media_type"] == "Episode" else ""

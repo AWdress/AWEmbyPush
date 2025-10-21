@@ -8,7 +8,7 @@ import sender
 from sender import Sender
 
 AUTHOR = "Awhitedress"
-VERSION = "4.2.0"
+VERSION = "4.3.0"
 UPDATETIME = "2025-10-21"
 DESCRIPTION = "AWEmbyPush 是一个优雅的 Emby/Jellyfin 媒体库更新通知服务"
 REPOSITORY = "https://github.com/AWdress/AWEmbyPush"
@@ -62,24 +62,28 @@ def welcome():
 def env_check():
     print(f"{'🔍 正在检查环境变量配置...':<40}")
     print("\n━━━━━━━━ 📊 媒体数据库配置 ━━━━━━━━")
-    print(f"{'TMDB_API_TOKEN:':<20} {'[必需]':<8} {os.getenv('TMDB_API_TOKEN', '❌ 未配置')}")
-    print(f"{'TVDB_API_KEY:':<20} {'[可选]':<8} {os.getenv('TVDB_API_KEY', '⚪ 未配置')}")
+    print(f"{'TMDB_API_TOKEN:':<25} {'[必需]':<8} {os.getenv('TMDB_API_TOKEN', '❌ 未配置')}")
+    print(f"{'TMDB_API_HOST:':<25} {'[可选]':<8} {os.getenv('TMDB_API_HOST', 'https://api.themoviedb.org')}")
+    print(f"{'TVDB_API_KEY:':<25} {'[可选]':<8} {os.getenv('TVDB_API_KEY', '⚪ 未配置')}")
     print("\n━━━━━━━━ 📱 Telegram Bot 配置 ━━━━━━━━")
-    print(f"{'TG_BOT_TOKEN:':<20} {'[可选]':<8} {os.getenv('TG_BOT_TOKEN', '⚪ 未配置')}")
-    print(f"{'TG_CHAT_ID:':<20} {'[可选]':<8} {os.getenv('TG_CHAT_ID', '⚪ 未配置')}")
+    print(f"{'TG_BOT_TOKEN:':<25} {'[可选]':<8} {os.getenv('TG_BOT_TOKEN', '⚪ 未配置')}")
+    print(f"{'TG_CHAT_ID:':<25} {'[可选]':<8} {os.getenv('TG_CHAT_ID', '⚪ 未配置')}")
+    print(f"{'TG_API_HOST:':<25} {'[可选]':<8} {os.getenv('TG_API_HOST', 'https://api.telegram.org')}")
     print("\n━━━━━━━━ 💼 企业微信配置 ━━━━━━━━")
-    print(f"{'WECHAT_CORP_ID:':<20} {'[可选]':<8} {os.getenv('WECHAT_CORP_ID', '⚪ 未配置')}")
-    print(f"{'WECHAT_CORP_SECRET:':<20} {'[可选]':<8} {os.getenv('WECHAT_CORP_SECRET', '⚪ 未配置')}")
-    print(f"{'WECHAT_AGENT_ID:':<20} {'[可选]':<8} {os.getenv('WECHAT_AGENT_ID', '⚪ 未配置')}")
-    print(f"{'WECHAT_USER_ID:':<20} {'[可选]':<8} {os.getenv('WECHAT_USER_ID', '@all')}")
-    print(f"{'WECHAT_PROXY_URL:':<20} {'[可选]':<8} {os.getenv('WECHAT_PROXY_URL', 'https://qyapi.weixin.qq.com')}")
+    print(f"{'WECHAT_CORP_ID:':<25} {'[可选]':<8} {os.getenv('WECHAT_CORP_ID', '⚪ 未配置')}")
+    print(f"{'WECHAT_CORP_SECRET:':<25} {'[可选]':<8} {os.getenv('WECHAT_CORP_SECRET', '⚪ 未配置')}")
+    print(f"{'WECHAT_AGENT_ID:':<25} {'[可选]':<8} {os.getenv('WECHAT_AGENT_ID', '⚪ 未配置')}")
+    print(f"{'WECHAT_USER_ID:':<25} {'[可选]':<8} {os.getenv('WECHAT_USER_ID', '@all')}")
+    print(f"{'WECHAT_PROXY_URL:':<25} {'[可选]':<8} {os.getenv('WECHAT_PROXY_URL', 'https://qyapi.weixin.qq.com')}")
     print("\n━━━━━━━━ 🔔 Bark 推送配置 ━━━━━━━━")
-    print(f"{'BARK_SERVER:':<20} {'[可选]':<8} {os.getenv('BARK_SERVER', 'https://api.day.app')}")
-    print(f"{'BARK_DEVICE_KEYS:':<20} {'[可选]':<8} {os.getenv('BARK_DEVICE_KEYS', '⚪ 未配置')}")
+    print(f"{'BARK_SERVER:':<25} {'[可选]':<8} {os.getenv('BARK_SERVER', 'https://api.day.app')}")
+    print(f"{'BARK_DEVICE_KEYS:':<25} {'[可选]':<8} {os.getenv('BARK_DEVICE_KEYS', '⚪ 未配置')}")
     print("\n━━━━━━━━ 📝 日志配置 ━━━━━━━━")
-    print(f"{'LOG_LEVEL:':<20} {'[可选]':<8} {os.getenv('LOG_LEVEL', 'INFO')}")
-    print(f"{'LOG_EXPORT:':<20} {'[可选]':<8} {os.getenv('LOG_EXPORT', 'False')}")
-    print(f"{'LOG_PATH:':<20} {'[可选]':<8} {os.getenv('LOG_PATH', '/var/tmp/awembypush')}")
+    print(f"{'LOG_LEVEL:':<25} {'[可选]':<8} {os.getenv('LOG_LEVEL', 'INFO')}")
+    print(f"{'LOG_EXPORT:':<25} {'[可选]':<8} {os.getenv('LOG_EXPORT', 'False')}")
+    print(f"{'LOG_PATH:':<25} {'[可选]':<8} {os.getenv('LOG_PATH', '/var/tmp/awembypush')}")
+    print("\n━━━━━━━━ ⚙️  高级配置 ━━━━━━━━")
+    print(f"{'EPISODE_CACHE_TIMEOUT:':<25} {'[可选]':<8} {os.getenv('EPISODE_CACHE_TIMEOUT', '30')}秒")
 
     # 检查媒体数据库信息
     try:

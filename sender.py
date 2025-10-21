@@ -52,21 +52,22 @@ class TelegramSender(MessageSender):
         server_name = media["server_name"]
         for ch in ["_", "*", "`", "["]:
             server_name = server_name.replace(ch, f"\\{ch}")
+        
+        # 处理合并剧集的显示
+        if media.get("tv_episode_merged"):
+            episode_text = f"已更新至 第{media['tv_season']}季 第{media['tv_episode_range']}集 (共{media['tv_episode_count']}集)\n"
+            title = media["media_name"]
+        else:
+            episode_text = f"已更新至 第{media['tv_season']}季 第{media['tv_episode']}集\n" if media["media_type"] == "Episode" else ""
+            title = media["media_name"] if media["media_type"] == "Movie" else f"{media['media_name']} {media['tv_episode_name']}"
+        
         caption = caption.format(
             server_name=server_name,
             type_ch="电影" if media["media_type"] == "Movie" else "剧集",
-            title=(
-                media["media_name"]
-                if media["media_type"] == "Movie"
-                else f"{media['media_name']} {media['tv_episode_name']}"
-            ),
+            title=title,
             # 部分电视剧没有 air_date 导致无法获取当前剧集的上映年份，增加年份字段判断保护
             year=media["media_rel"][0:4] if media["media_rel"] else "Unknown",
-            episode=(
-                f"已更新至 第{media['tv_season']}季 第{media['tv_episode']}集\n"
-                if media["media_type"] == "Episode"
-                else ""
-            ),
+            episode=episode_text,
             rating=media["media_rating"],
             rel=media["media_rel"],
             intro=media["media_intro"],
@@ -107,9 +108,13 @@ class WechatAppSender(MessageSender):
                     {
                         "title": f"[{'电影' if media.get('media_type') == 'Movie' else '剧集'}] {media.get('media_name')} ({media.get('media_rel')[:4]})"
                         + (
-                            f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode')} 集"
-                            if media.get("media_type") == "Episode"
-                            else ""
+                            f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode_range')} 集 (共{media.get('tv_episode_count')}集)"
+                            if media.get("tv_episode_merged")
+                            else (
+                                f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode')} 集"
+                                if media.get("media_type") == "Episode"
+                                else ""
+                            )
                         ),
                         "desc": f"{media.get('media_intro')}",
                     }
@@ -132,9 +137,13 @@ class WechatAppSender(MessageSender):
             article = {
                 "title" : f"[影视更新][{'电影' if media.get('media_type') == 'Movie' else '剧集'}] {media.get('media_name')} ({media.get('media_rel')[:4]})"
                             + (
-                                f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode')} 集"
-                                if media.get("media_type") == "Episode"
-                                else ""
+                                f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode_range')} 集 (共{media.get('tv_episode_count')}集)"
+                                if media.get("tv_episode_merged")
+                                else (
+                                    f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode')} 集"
+                                    if media.get("media_type") == "Episode"
+                                    else ""
+                                )
                             ),
                 "description" : f"{media.get('media_intro')}",
                 "url" : f"{media.get('media_tmdburl')}",
@@ -166,14 +175,15 @@ class BarkSender(MessageSender):
         bark.send_message(payload)
 
     def send_media_details(self, media: dict):
+        episode_info = ""
+        if media.get("tv_episode_merged"):
+            episode_info = f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode_range')} 集 (共{media.get('tv_episode_count')}集)"
+        elif media.get("media_type") == "Episode":
+            episode_info = f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode')} 集"
+        
         payload = {
             "title": f"🎬 #{media.get('server_name')} 影视更新",
-            "body": f"[{'电影' if media['media_type'] == 'Movie' else '剧集'}] {media['media_name']} ({media['media_rel'][:4]})"
-            + (
-                f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode')} 集"
-                if media.get("media_type") == "Episode"
-                else ""
-            ),
+            "body": f"[{'电影' if media['media_type'] == 'Movie' else '剧集'}] {media['media_name']} ({media['media_rel'][:4]})" + episode_info,
             "icon": f"https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/{media.get('server_type', 'Emby').lower()}.png",
             "url": f"{media['media_tmdburl']}",
         }

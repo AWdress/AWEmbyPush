@@ -4,8 +4,10 @@
 import requests, json, os
 import log
 
+# Telegram API Host，支持自定义反代地址
+TG_API_HOST = os.getenv("TG_API_HOST", "https://api.telegram.org")
 # 填充电报机器人的token
-TG_BOT_URL = "https://api.telegram.org/bot%s/" % os.getenv("TG_BOT_TOKEN")
+TG_BOT_URL = f"{TG_API_HOST}/bot{os.getenv('TG_BOT_TOKEN')}/"
 # 填充电报频道 chat_id
 TG_CHAT_ID = os.getenv("TG_CHAT_ID")
 

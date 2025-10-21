@@ -3,7 +3,9 @@
 
 import requests, os, log
 
-TMDB_API = "https://api.themoviedb.org/3"
+# TMDB API Host，支持自定义反代地址
+TMDB_API_HOST = os.getenv("TMDB_API_HOST", "https://api.themoviedb.org")
+TMDB_API = f"{TMDB_API_HOST}/3"
 
 TMDB_API_TOKEN = os.getenv("TMDB_API_TOKEN")
 TMDB_IMAGE_DOMAIN = os.getenv("TMDB_IMAGE_DOMAIN", "https://image.tmdb.org")

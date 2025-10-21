@@ -4,7 +4,7 @@
 
 **优雅的 Emby/Jellyfin 媒体库更新通知服务**
 
-[![GitHub release](https://img.shields.io/badge/release-v4.2.0-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
+[![GitHub release](https://img.shields.io/badge/release-v4.3.0-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
 [![Docker](https://img.shields.io/badge/docker-awdress%2Fawembypush-blue.svg)](https://hub.docker.com/r/awdress/awembypush)
 [![Build Status](https://github.com/AWdress/AWEmbyPush/actions/workflows/docker-build.yml/badge.svg)](https://github.com/AWdress/AWEmbyPush/actions)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
@@ -48,14 +48,18 @@
 </tr>
 </table>
 
-### 🆕 最新更新 (v4.2.0)
+### 🆕 最新更新 (v4.3.0)
 
+- 🌐 **新增 API 反代支持** - 解决国内网络问题
+  - `TG_API_HOST` - 自定义 Telegram API 反代地址
+  - `TMDB_API_HOST` - 自定义 TMDB API 反代地址
+- 📺 **智能电视剧集合并推送**
+  - 30秒内添加多集自动合并为一条通知
+  - 显示格式：第15-17集 (共3集)
+  - 可自定义缓存时间
+- 🎨 **中文化界面** - 全面优化启动信息和提示
 - 🎉 **项目重命名为 AWEmbyPush**
-- 🌐 **新增企业微信代理支持** (`WECHAT_PROXY_URL`)
-  - 完美支持 2022年6月20日后创建的自建应用
-  - 灵活配置代理服务器地址
-- 🚀 优化启动信息展示
-- 📦 改进 Docker 镜像构建流程
+- 🌐 **企业微信代理支持** (`WECHAT_PROXY_URL`)
 
 ---
 
@@ -120,6 +124,11 @@ services:
       - LOG_LEVEL=INFO
       - LOG_EXPORT=False
       - LOG_PATH=/var/tmp/awembypush/
+      
+      # 高级配置（可选）- 反代和电视剧集合并
+      - TG_API_HOST=https://api.telegram.org  # Telegram API 反代地址
+      - TMDB_API_HOST=https://api.themoviedb.org  # TMDB API 反代地址
+      - EPISODE_CACHE_TIMEOUT=30  # 电视剧集缓存时间（秒）
 ```
 
 启动服务：
@@ -193,6 +202,30 @@ docker-compose up -d
 | `LOG_LEVEL` | 日志等级 | `INFO` |
 | `LOG_EXPORT` | 是否导出日志文件 | `False` |
 | `LOG_PATH` | 日志文件路径 | `/var/tmp/awembypush` |
+
+#### ⚙️ 高级配置 (可选)
+
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| `TG_API_HOST` | 🆕 Telegram API 反代地址 | `https://api.telegram.org` |
+| `TMDB_API_HOST` | 🆕 TMDB API 反代地址 | `https://api.themoviedb.org` |
+| `EPISODE_CACHE_TIMEOUT` | 🆕 电视剧集缓存时间（秒） | `30` |
+
+<details>
+<summary>💡 高级配置说明</summary>
+
+**API 反代配置**
+- 如果您在国内访问 Telegram 或 TMDB 遇到网络问题，可以配置反代地址
+- 例如：`TG_API_HOST=https://your-tg-proxy.com`
+- 例如：`TMDB_API_HOST=https://your-tmdb-proxy.com`
+
+**电视剧集合并推送**
+- 当短时间内添加同一电视剧的多集时，系统会自动合并推送
+- 例如：添加第15、16、17集 → 推送显示为 "第15-17集 (共3集)"
+- 默认缓存时间30秒，可通过 `EPISODE_CACHE_TIMEOUT` 调整
+- 单独添加一集时仍然正常推送，不受影响
+
+</details>
 
 ---
 

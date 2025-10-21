@@ -6,6 +6,7 @@ import my_utils, tmdb_api, tvdb_api, tgbot
 import log
 import sender
 from sender import Sender
+from episode_cache import episode_cache_manager
 
 from datetime import datetime
 
@@ -109,7 +110,8 @@ class Movie(IMedia):
         log.logger.debug(self.info_)
 
     def send_caption(self):
-        sender.Sender.send_media_details(self.media_detail_)
+        # 使用缓存管理器处理推送（支持电视剧集合并）
+        episode_cache_manager.add_episode(self.media_detail_)
 
     def get_details(self):
         if "Tmdb" not in self.info_["ProviderIds"]:
@@ -239,7 +241,8 @@ class Episode(IMedia):
 
 
     def send_caption(self):
-        sender.Sender.send_media_details(self.media_detail_)
+        # 使用缓存管理器处理推送（支持电视剧集合并）
+        episode_cache_manager.add_episode(self.media_detail_)
 
 
 def create_media(emby_media_info):

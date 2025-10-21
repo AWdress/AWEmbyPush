@@ -4,7 +4,7 @@
 
 **优雅的 Emby/Jellyfin 媒体库更新通知服务**
 
-[![GitHub release](https://img.shields.io/badge/release-v4.3.0-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
+[![GitHub release](https://img.shields.io/badge/release-v4.3.1-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
 [![Docker](https://img.shields.io/badge/docker-awdress%2Fawembypush-blue.svg)](https://hub.docker.com/r/awdress/awembypush)
 [![Build Status](https://github.com/AWdress/AWEmbyPush/actions/workflows/docker-build.yml/badge.svg)](https://github.com/AWdress/AWEmbyPush/actions)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
@@ -48,18 +48,15 @@
 </tr>
 </table>
 
-### 🆕 最新更新 (v4.3.0)
+### 🆕 最新更新 (v4.3.1)
 
-- 🌐 **新增 API 反代支持** - 解决国内网络问题
-  - `TG_API_HOST` - 自定义 Telegram API 反代地址
-  - `TMDB_API_HOST` - 自定义 TMDB API 反代地址
-- 📺 **智能电视剧集合并推送**
-  - 30秒内添加多集自动合并为一条通知
-  - 显示格式：第15-17集 (共3集)
-  - 可自定义缓存时间
-- 🎨 **中文化界面** - 全面优化启动信息和提示
-- 🎉 **项目重命名为 AWEmbyPush**
-- 🌐 **企业微信代理支持** (`WECHAT_PROXY_URL`)
+- 🐛 **修复剧集缓存bug** - 修复不同剧集被错误合并的问题
+  - 添加 `media_tmdbid` 字段以正确区分不同剧集
+  - 确保缓存键使用 TMDB ID 区分不同的剧集
+- 🎨 **优化欢迎消息格式** - 推送消息更美观
+  - 启动欢迎消息字段名改为中文
+  - Telegram、企业微信、Bark 推送格式优化
+  - 更清晰的层级结构和分隔线
 
 ---
 
@@ -355,6 +352,19 @@ graph LR
 ---
 
 ## 📝 更新日志
+
+### 🎉 v4.3.1 (2025-10-21)
+
+- 🐛 修复剧集缓存合并bug - 不同剧集被错误合并的问题
+- 🎨 优化启动欢迎消息格式 - 改用中文字段名
+- ✨ 提升推送消息的美观度和可读性
+
+### 🎉 v4.3.0 (2025-10-21)
+
+- 🌐 新增 API 反代支持 - `TG_API_HOST`、`TMDB_API_HOST`
+- 📺 智能电视剧集合并推送功能
+- 🎨 中文化界面优化
+- 🐳 优化 Docker 镜像构建流程
 
 ### 🎉 v4.2.0 (2025-10-21)
 

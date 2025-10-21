@@ -8,7 +8,7 @@ import sender
 from sender import Sender
 
 AUTHOR = "Awhitedress"
-VERSION = "4.3.0"
+VERSION = "4.3.1"
 UPDATETIME = "2025-10-21"
 DESCRIPTION = "AWEmbyPush 是一个优雅的 Emby/Jellyfin 媒体库更新通知服务"
 REPOSITORY = "https://github.com/AWdress/AWEmbyPush"
@@ -44,11 +44,11 @@ CONTENT_STR = f"""
 
 CONTENT = {
     "content": "欢迎使用 AWEmbyPush!",
-    "author": AUTHOR,
-    "version": VERSION,
-    "update_time": UPDATETIME,
-    "intro": DESCRIPTION,
-    "repo": REPOSITORY,
+    "作者": AUTHOR,
+    "版本": VERSION,
+    "更新时间": UPDATETIME,
+    "项目描述": DESCRIPTION,
+    "项目地址": REPOSITORY,
 }
 
 

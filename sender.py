@@ -28,7 +28,19 @@ class TelegramSender(MessageSender):
         return "Telegram"
     
     def send_welcome(self, welcome: dict):
-        msg = f"{welcome['content']}\nAuthor: {welcome['author']}\nVersion: {welcome['version']}\nUpdate Time: {welcome['update_time']}\nDescription: {welcome['intro']}\nRepository: {welcome['repo']}\n"
+        msg = f"""🎬 {welcome['content']}
+
+━━━━━━━━━━━━━━━━━━━━━━
+👤 作者：{welcome['作者']}
+📦 版本：{welcome['版本']}
+📅 更新时间：{welcome['更新时间']}
+
+📝 项目描述
+{welcome['项目描述']}
+
+🔗 项目地址
+{welcome['项目地址']}
+━━━━━━━━━━━━━━━━━━━━━━"""
         for ch in ["_", "*", "`", "["]:
             msg = msg.replace(ch, f"\\{ch}")
         tgbot.send_message(msg)
@@ -158,9 +170,9 @@ class BarkSender(MessageSender):
 
     def send_welcome(self, welcome: dict):
         payload = {
-            "title": f"🎊 欢迎使用 AWEmbyPush {welcome['version']}",
-            "body": f"AWEmbyPush 是一个优雅的 Emby/Jellyfin 媒体库更新通知服务，支持多种推送渠道。",
-            "url": f"{welcome['repo']}"
+            "title": f"🎬 {welcome['content']}",
+            "body": f"👤 作者：{welcome['作者']}\n📦 版本：{welcome['版本']}\n📅 更新时间：{welcome['更新时间']}\n\n{welcome['项目描述']}",
+            "url": f"{welcome['项目地址']}"
         }
         bark.send_message(payload)
 

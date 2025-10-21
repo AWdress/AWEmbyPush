@@ -209,23 +209,23 @@ def send_welcome_card(welcome):
                 "title": f"🎉 {welcome['content']}",
             },
             "quote_area": {
-                "quote_text": f"{welcome['intro']}",
+                "quote_text": f"{welcome['项目描述']}",
             },
             "horizontal_content_list": [
-                {"keyname": "Author", "value": f"{welcome['author']}"},
-                {"keyname": "Version", "value": f"{welcome['version']}"},
-                {"keyname": "Update Time", "value": f"{welcome['update_time']}"},
+                {"keyname": "作者", "value": f"{welcome['作者']}"},
+                {"keyname": "版本", "value": f"{welcome['版本']}"},
+                {"keyname": "更新时间", "value": f"{welcome['更新时间']}"},
             ],
             "jump_list": [
                 {
                     "type": 1,
-                    "url": f"{welcome['repo']}",
+                    "url": f"{welcome['项目地址']}",
                     "title": "👾 github",
                 },
             ],
             "card_action": {
                 "type": 1,
-                "url": f"{welcome['repo']}",
+                "url": f"{welcome['项目地址']}",
             },
         },
     }

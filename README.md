@@ -6,6 +6,7 @@
 
 [![GitHub release](https://img.shields.io/badge/release-v4.2.0-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
 [![Docker](https://img.shields.io/badge/docker-awdress%2Fawembypush-blue.svg)](https://hub.docker.com/r/awdress/awembypush)
+[![Build Status](https://github.com/AWdress/AWEmbyPush/actions/workflows/docker-build.yml/badge.svg)](https://github.com/AWdress/AWEmbyPush/actions)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 

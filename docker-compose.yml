@@ -3,7 +3,7 @@ services:
   awembypush:
     build:
       context: .
-      dockerfile: dockerfile
+      dockerfile: Dockerfile
     image: awdress/awembypush:latest
     environment:
       - TZ=Asia/Shanghai

@@ -228,6 +228,7 @@ class Episode(IMedia):
         
         self.media_detail_["media_name"] = self.info_["Name"]
         self.media_detail_["media_type"] = "Episode"
+        self.media_detail_["media_tmdbid"] = self.info_["ProviderIds"]["Tmdb"]
         self.media_detail_["media_rating"] = tv_details["vote_average"]
         self.media_detail_["media_rel"] = tv_details["air_date"]
         self.media_detail_["media_intro"] = tv_details["overview"]

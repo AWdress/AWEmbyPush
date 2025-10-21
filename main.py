@@ -7,24 +7,24 @@ import os, time
 import sender
 from sender import Sender
 
-AUTHOR = "xu4n_ch3n"
-VERSION = "4.1.0"
-UPDATETIME = "2025-04-10"
-DESCRIPTION = "Emby Notifier is a media notification service for Emby Server. Now Jellyfin Server is alreay supported."
-REPOSITORY = "https://github.com/Ccccx159/Emby_Notifier"
-CONTRIBUTORS = "xiaoQQya"
+AUTHOR = "Awhitedress"
+VERSION = "4.2.0"
+UPDATETIME = "2025-10-21"
+DESCRIPTION = "AWEmbyPush is a media notification service for Emby Server. Now Jellyfin Server is alreay supported."
+REPOSITORY = "https://github.com/AWdress/AWEmbyPush"
+CONTRIBUTORS = "xu4n_ch3n, xiaoQQya"
 
 WELCOME = f"""
-███████╗███╗   ███╗██████╗ ██╗   ██╗    ███╗   ██╗ ██████╗ ████████╗██╗███████╗██╗███████╗██████╗
-██╔════╝████╗ ████║██╔══██╗╚██╗ ██╔╝    ████╗  ██║██╔═══██╗╚══██╔══╝██║██╔════╝██║██╔════╝██╔══██╗
-█████╗  ██╔████╔██║██████╔╝ ╚████╔╝     ██╔██╗ ██║██║   ██║   ██║   ██║█████╗  ██║█████╗  ██████╔╝
-██╔══╝  ██║╚██╔╝██║██╔══██╗  ╚██╔╝      ██║╚██╗██║██║   ██║   ██║   ██║██╔══╝  ██║██╔══╝  ██╔══██╗
-███████╗██║ ╚═╝ ██║██████╔╝   ██║       ██║ ╚████║╚██████╔╝   ██║   ██║██║     ██║███████╗██║  ██║
-╚══════╝╚═╝     ╚═╝╚═════╝    ╚═╝       ╚═╝  ╚═══╝ ╚═════╝    ╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝
+ █████╗ ██╗    ██╗███████╗███╗   ███╗██████╗ ██╗   ██╗██████╗ ██╗   ██╗███████╗██╗  ██╗
+██╔══██╗██║    ██║██╔════╝████╗ ████║██╔══██╗╚██╗ ██╔╝██╔══██╗██║   ██║██╔════╝██║  ██║
+███████║██║ █╗ ██║█████╗  ██╔████╔██║██████╔╝ ╚████╔╝ ██████╔╝██║   ██║███████╗███████║
+██╔══██║██║███╗██║██╔══╝  ██║╚██╔╝██║██╔══██╗  ╚██╔╝  ██╔═══╝ ██║   ██║╚════██║██╔══██║
+██║  ██║╚███╔███╔╝███████╗██║ ╚═╝ ██║██████╔╝   ██║   ██║     ╚██████╔╝███████║██║  ██║
+╚═╝  ╚═╝ ╚══╝╚══╝ ╚══════╝╚═╝     ╚═╝╚═════╝    ╚═╝   ╚═╝      ╚═════╝ ╚══════╝╚═╝  ╚═╝
 """
 
 CONTENT_STR = f"""
-Welcome to Emby Notifier!
+Welcome to AWEmbyPush!
 Author: {AUTHOR}
 Version: {VERSION}
 Update Time: {UPDATETIME}
@@ -35,7 +35,7 @@ Contributors: {CONTRIBUTORS}
 """
 
 CONTENT = {
-    "content": "Welcome to Emby Notifier!",
+    "content": "Welcome to AWEmbyPush!",
     "author": AUTHOR,
     "version": VERSION,
     "update_time": UPDATETIME,
@@ -64,13 +64,14 @@ def env_check():
     print(f"{'WECHAT_CORP_SECRET:':<15} {'(req)'} {os.getenv('WECHAT_CORP_SECRET', 'None')}")
     print(f"{'WECHAT_AGENT_ID:':<15} {'(req)'} {os.getenv('WECHAT_AGENT_ID', 'None')}")
     print(f"{'WECHAT_USER_ID:':<15} {'(req)'} {os.getenv('WECHAT_USER_ID', 'None')}")
+    print(f"{'WECHAT_PROXY_URL:':<15} {'(opt)'} {os.getenv('WECHAT_PROXY_URL', 'https://qyapi.weixin.qq.com')}")
     print("\n--------Bark Server info:")
     print(f"{'BARK_SERVER:':<15} {'(opt)'} {os.getenv('BARK_SERVER', 'https://api.day.app')}")
     print(f"{'BARK_DEVICE_KEYS:':<15} {'(opt)'} {os.getenv('BARK_DEVICE_KEYS', 'None')}")
     print("\n--------Log info:")
     print(f"{'LOG_LEVEL:':<15} {'(opt)'} {os.getenv('LOG_LEVEL', 'INFO')}")
     print(f"{'LOG_EXPORT:':<15} {'(opt)'} {os.getenv('LOG_EXPORT', 'False')}")
-    print(f"{'LOG_PATH:':<15} {'(opt)'} {os.getenv('LOG_PATH', '/var/tmp/emby_notifier_tg')}")
+    print(f"{'LOG_PATH:':<15} {'(opt)'} {os.getenv('LOG_PATH', '/var/tmp/awembypush')}")
 
     # 检查媒体数据库信息
     try:
@@ -94,7 +95,7 @@ def env_check():
 
     if 'True' == os.getenv('LOG_EXPORT'):
         # 如果有日志文件输出，则向日志文件输出欢迎信息
-        file_path = os.getenv('LOG_PATH', '/var/tmp/emby_notifier_tg/') + '/' + time.strftime("%Y-%m-%d", time.localtime()) + '.log'
+        file_path = os.getenv('LOG_PATH', '/var/tmp/awembypush/') + '/' + time.strftime("%Y-%m-%d", time.localtime()) + '.log'
         print(f"{WELCOME}\n{CONTENT_STR}", file=open(file_path, 'w'))
             
 

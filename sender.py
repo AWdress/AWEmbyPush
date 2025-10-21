@@ -149,8 +149,8 @@ class BarkSender(MessageSender):
 
     def send_welcome(self, welcome: dict):
         payload = {
-            "title": f"🎊 Welcome to EMBY Notifier {welcome['version']}",
-            "body": f"Emby Notifier is a media notification service for Emby Server. Now Jellyfin Server is alreay supported.",
+            "title": f"🎊 Welcome to AWEmbyPush {welcome['version']}",
+            "body": f"AWEmbyPush is a media notification service for Emby Server. Now Jellyfin Server is alreay supported.",
             "url": f"{welcome['repo']}"
         }
         bark.send_message(payload)
@@ -160,7 +160,7 @@ class BarkSender(MessageSender):
         # 将*中间的字符串提取出来作为server_name
         server_name = test_content.split("*")[3]
         payload = {
-            "title": "🎉 EMBY Notifier Test",
+            "title": "🎉 AWEmbyPush Test",
             "body": f"Congratulation! This is a test message from {server_name}! Now you can try adding a new media item to your Emby Server, whether it is a movie or a TV series~"
         }
         bark.send_message(payload)

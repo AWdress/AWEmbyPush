@@ -1,10 +1,10 @@
 version: '3'
 services:
-  emby_notifier_tg:
+  awembypush:
     build:
       context: .
       dockerfile: dockerfile
-    image: b1gfac3c4t/emby_notifier_tg:latest
+    image: awdress/awembypush:latest
     environment:
       - TZ=Asia/Shanghai
       # 这里所有的环境变量都不要使用引号
@@ -16,11 +16,13 @@ services:
       - TVDB_API_KEY=<Your TVDB API Key>
       - LOG_LEVEL=INFO # [DEBUG, INFO, WARNING] 三个等级，默认 INFO
       - LOG_EXPORT=False # [True, False0] 是否将日志输出到文件，默认 False
-      - LOG_PATH=/var/tmp/emby_notifier_tg/ # 默认 /var/tmp/emby_notifier_tg/
+      - LOG_PATH=/var/tmp/awembypush/ # 默认 /var/tmp/awembypush/
       - WECHAT_CORP_ID=xxxxx      # 企业微信：企业 id
       - WECHAT_CORP_SECRET=xxxxxx # 企业微信：应用凭证秘钥
       - WECHAT_AGENT_ID=xxxxx # 企业微信：应用 agentid
-      - WECHAT_USER_ID=xxxxxx # 企业微信：用户 id，不设置时默认为 “@all”
+      - WECHAT_USER_ID=xxxxxx # 企业微信：用户 id，不设置时默认为 "@all"
+      - WECHAT_PROXY_URL=https://qyapi.weixin.qq.com  # 企业微信：消息转发代理地址，2022年6月20日后创建的自建应用才需要配置，默认 https://qyapi.weixin.qq.com
+      - WECHAT_MSG_TYPE=news_notice  # 企业微信：消息类型，支持 news/news_notice，不设置默认为 news_notice
     network_mode: "bridge"
     ports:
       - "8000:8000"

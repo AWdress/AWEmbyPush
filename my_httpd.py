@@ -6,7 +6,7 @@ import my_utils
 
 
 async def worker(msg_queue):
-    log.logger.info("Emby Notifier started.")
+    log.logger.info("AWEmbyPush started.")
     while True:
         msg = await msg_queue.get()  # 从队列中获取消息
         # 在这里进行消息处理，如发送到其他地方或执行其他操作

@@ -16,6 +16,10 @@ AGENT_ID = int(os.getenv("WECHAT_AGENT_ID", "0"))
 # 用户 id，推送给所有人时，设置为 "@all"
 USER_ID = os.getenv("WECHAT_USER_ID", "@all")
 
+# 微信消息代理地址，2022年6月20日后创建的自建应用才需要
+# 不使用代理时保留默认值 https://qyapi.weixin.qq.com
+WECHAT_PROXY_URL = os.getenv("WECHAT_PROXY_URL", "https://qyapi.weixin.qq.com")
+
 # TOKEN
 TOKEN = {
     "access_token": None,
@@ -27,12 +31,12 @@ TOKEN_FILE = "_tmp_wechat.json"
 
 # 获取应用 token 的 url
 GET_TOKEN_URL = (
-    "https://qyapi.weixin.qq.com/cgi-bin/gettoken?"
+    f"{WECHAT_PROXY_URL}/cgi-bin/gettoken?"
     + f"corpid={CORP_ID}&corpsecret={CORP_SECRET}"
 )
 
 # 消息推送 url
-SEND_MSG_URL = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token="
+SEND_MSG_URL = f"{WECHAT_PROXY_URL}/cgi-bin/message/send?access_token="
 
 
 def get_access_token():
@@ -198,7 +202,7 @@ def send_welcome_card(welcome):
         "template_card": {
             "card_type": "text_notice",
             "source": {
-                "desc": "🚀 Emby Notifier",
+                "desc": "🚀 AWEmbyPush",
                 "desc_color": 0,
             },
             "main_title": {

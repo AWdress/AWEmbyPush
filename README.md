@@ -1,6 +1,6 @@
-# Emby Notifier
+# AWEmbyPush
 
-> 这是另一个项目 [watchdog_for_Emby](https://github.com/Ccccx159/watchdog_for_Emby/tree/main) 的最新优化版本，取消了 nfo 文件的监视依赖，该版本不再需要手动设置媒体库路径，对通过网盘挂载生成的媒体库更加友好~
+> 这是基于 [Emby_Notifier](https://github.com/Ccccx159/Emby_Notifier) 项目的优化版本，增加了微信代理功能支持，对通过网盘挂载生成的媒体库更加友好~
 
 ## 重大更新！！！
 
@@ -23,13 +23,14 @@ v2.0.0 版本现已支持 Jellyfin Server！！！详细配置请参看章节 [J
 
 ## Contributors
 
-[![Contributors](http://contrib.nn.ci/api?repo=Ccccx159/Emby_Notifier)](https://github.com/Ccccx159/Emby_Notifier/graphs/contributors)
+感谢原作者 xu4n_ch3n 及贡献者 xiaoQQya
 
 ## 修订版本
 
 
 | 版本 | 日期 | 修订说明 |
 | ----- | ----- | ----- |
+| v4.2.0 | 2025.10.21 | <li>1. 增加微信代理功能支持（WECHAT_PROXY_URL）；</li><li>2. 项目重命名为 AWEmbyPush；</li><li>3. 更新所有启动信息和项目信息</li> |
 | v4.1.0 | 2025.04.10 | <li>1. 微信增加图文消息类型支持；</li><li>2. 优化 TVDB_API_KEY 未配置时仍然查询TVDB导致报错的问题；</li><li>3. 修复 BARK_DEVICE_KEYS 未配置时启动报错的问题</li><li>4. 修改readme中TG变量说明</li> |
 | v4.0.1 | 2025.02.05 | <li>1. 环境校验补充增加 bark 参数检查；</li><li>2. 修复仅配置 bark sender 时配置校验失败问题；</li><li>3. 修改 wechat token 缓存文件命名，并修改 git ignore 文件</li> |
 | v4.0.0 | 2025.01.31 | <li>1. 新增 bark 推送支持，详细配置请参看 [bark 官网](https://bark.day.app/#/)；</li> |
@@ -55,7 +56,7 @@ v2.0.0 版本现已支持 Jellyfin Server！！！详细配置请参看章节 [J
 
 ## 简介
 
-**Emby Notifier** 是一个基于 Emby Server Webhooks 实现的自动通知工具。Emby Server 通过 Webhooks 插件，可以在影片刮削完成后，自动推送事件到指定的 URL。本项目通过监听 Emby Server 推送的 Webhooks 事件，获取影片的基本信息，通过 TMDB 的 API 查询影片的详细信息，然后通过 Telegram Bot 推送至指定频道。
+**AWEmbyPush** 是一个基于 Emby Server Webhooks 实现的自动通知工具。Emby Server 通过 Webhooks 插件，可以在影片刮削完成后，自动推送事件到指定的 URL。本项目通过监听 Emby Server 推送的 Webhooks 事件，获取影片的基本信息，通过 TMDB 的 API 查询影片的详细信息，然后通过 Telegram Bot / 企业微信 / Bark 推送通知。
 
 ## 环境变量和服务端口
 
@@ -71,11 +72,12 @@ v2.0.0 版本现已支持 Jellyfin Server！！！详细配置请参看章节 [J
 | TG_CHAT_ID | 可选 | Your Telegram Channel's Chat ID |
 | LOG_LEVEL | 可选 | 日志等级 [DEBUG, INFO, WARNING] 三个等级，默认 INFO|
 | LOG_EXPORT | 可选 | 日志写文件标志 [True, False] 是否将日志输出到文件，默认 False|
-| LOG_PATH | 可选 | 日志文件保存路径，默认 /var/tmp/emby_notifier_tg |
+| LOG_PATH | 可选 | 日志文件保存路径，默认 /var/tmp/awembypush |
 | WECHAT_CORP_ID | 可选 | （企业微信）企业 id |
 | WECHAT_CORP_SECRET | 可选 | （企业微信）应用的凭证秘钥 |
 | WECHAT_AGENT_ID | 可选 | （企业微信）应用 agentid |
-| WECHAT_USER_ID | 可选 | （企业微信）用户 id，默认为“@all” |
+| WECHAT_USER_ID | 可选 | （企业微信）用户 id，默认为"@all" |
+| WECHAT_PROXY_URL | 可选 | （企业微信）消息转发代理地址，2022年6月20日后创建的自建应用才需要，默认为 https://qyapi.weixin.qq.com |
 | WECHAT_MSG_TYPE | 可选 | （企业微信）消息类型，支持图文类型（news）与模板卡片（news_notice），默认模板卡片 |
 | BARK_SERVER | 可选 | bark 服务地址，默认为公共服务器：https://api.day.app |
 | BARK_DEVICE_KEYS | 可选 | bark 设备密钥，支持设置多个设备密钥，用逗号分隔。e.g. "abcdefqweqwe,qwewqeqeqw,qweqweqweq,qweqweqwe" |
@@ -83,13 +85,13 @@ v2.0.0 版本现已支持 Jellyfin Server！！！详细配置请参看章节 [J
 ## docker Run
 
 ~~~shell
-docker run -d --name=emby-notifier-tg --restart=unless-stopped \
+docker run -d --name=awembypush --restart=unless-stopped \
     -e TMDB_API_TOKEN=Your_TMDB_API_Token \
     -e TVDB_API_KEY=Your_TVDB_API_Key \
     -e TG_BOT_TOKEN=Your_Telegram_Bot_Token \
     -e TG_CHAT_ID=Your_Telegram_Chat_ID \
     -p 8000:8000 \
-    b1gfac3c4t/emby_notifier_tg:latest
+    awdress/awembypush:latest
   
 ~~~
 
@@ -98,11 +100,11 @@ docker run -d --name=emby-notifier-tg --restart=unless-stopped \
 ```yaml
 version: '3'
 services:
-  emby_notifier_tg:
+  awembypush:
     build:
       context: .
       dockerfile: dockerfile
-    image: b1gfac3c4t/emby_notifier_tg:latest
+    image: awdress/awembypush:latest
     environment:
       - TZ=Asia/Shanghai
       # 这里所有的环境变量都不要使用引号
@@ -114,11 +116,12 @@ services:
       - TVDB_API_KEY=<Your TVDB API Key>
       - LOG_LEVEL=INFO # [DEBUG, INFO, WARNING] 三个等级，默认 INFO
       - LOG_EXPORT=False # [True, False0] 是否将日志输出到文件，默认 False
-      - LOG_PATH=/var/tmp/emby_notifier_tg/ # 默认 /var/tmp/emby_notifier_tg/
+      - LOG_PATH=/var/tmp/awembypush/ # 默认 /var/tmp/awembypush/
       - WECHAT_CORP_ID=xxxxx      # 企业微信：企业 id
       - WECHAT_CORP_SECRET=xxxxxx # 企业微信：应用凭证秘钥
       - WECHAT_AGENT_ID=xxxxx # 企业微信：应用 agentid
-      - WECHAT_USER_ID=xxxxxx # 企业微信：用户 id，不设置时默认为 “@all”
+      - WECHAT_USER_ID=xxxxxx # 企业微信：用户 id，不设置时默认为 "@all"
+      - WECHAT_PROXY_URL=https://qyapi.weixin.qq.com  # 企业微信：消息转发代理地址，2022年6月20日后创建的自建应用才需要配置，默认 https://qyapi.weixin.qq.com
       - WECHAT_MSG_TYPE=news_notice  # 企业微信：消息类型，支持 news/news_notice，不设置默认为 news_notice
     network_mode: "bridge"
     ports:

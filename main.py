@@ -12,7 +12,7 @@ VERSION = "4.3.0"
 UPDATETIME = "2025-10-21"
 DESCRIPTION = "AWEmbyPush 是一个优雅的 Emby/Jellyfin 媒体库更新通知服务"
 REPOSITORY = "https://github.com/AWdress/AWEmbyPush"
-CONTRIBUTORS = "xu4n_ch3n, xiaoQQya"
+THANKS_TO = "基于 xu4n_ch3n 的 Emby_Notifier 项目"
 
 WELCOME = f"""
  █████╗ ██╗    ██╗███████╗███╗   ███╗██████╗ ██╗   ██╗██████╗ ██╗   ██╗███████╗██╗  ██╗
@@ -33,7 +33,7 @@ CONTENT_STR = f"""
 ║  📅 更新时间 (Update)     : {UPDATETIME:<50} ║
 ║  📝 项目描述 (Description): {DESCRIPTION:<36} ║
 ║  🔗 项目地址 (Repository) : {REPOSITORY:<43} ║
-║  🤝 贡献者 (Contributors) : {CONTRIBUTORS:<48} ║
+║  🙏 致谢 (Thanks)        : {THANKS_TO:<48} ║
 ║                                                                              ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║  💡 支持推送渠道: Telegram Bot 📱 | 企业微信 💼 | Bark 🔔                      ║
@@ -49,7 +49,6 @@ CONTENT = {
     "update_time": UPDATETIME,
     "intro": DESCRIPTION,
     "repo": REPOSITORY,
-    "contributors": CONTRIBUTORS,
 }
 
 

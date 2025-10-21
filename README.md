@@ -397,13 +397,9 @@ graph LR
 
 ---
 
-## 🤝 贡献者
+## 🙏 致谢
 
-感谢以下开发者的贡献：
-
-- 原作者：[xu4n_ch3n](https://github.com/Ccccx159) - [Emby_Notifier](https://github.com/Ccccx159/Emby_Notifier)
-- 贡献者：xiaoQQya
-- 当前维护：[Awhitedress](https://github.com/AWdress)
+感谢原作者 [xu4n_ch3n](https://github.com/Ccccx159) 的 [Emby_Notifier](https://github.com/Ccccx159/Emby_Notifier) 项目
 
 ---
 

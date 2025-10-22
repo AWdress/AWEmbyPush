@@ -4,7 +4,7 @@
 
 **优雅的 Emby/Jellyfin 媒体库更新通知服务**
 
-[![GitHub release](https://img.shields.io/badge/release-v4.3.2-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
+[![GitHub release](https://img.shields.io/badge/release-v4.3.3-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
 [![Docker](https://img.shields.io/badge/docker-awdress%2Fawembypush-blue.svg)](https://hub.docker.com/r/awdress/awembypush)
 [![Build Status](https://github.com/AWdress/AWEmbyPush/actions/workflows/docker-build.yml/badge.svg)](https://github.com/AWdress/AWEmbyPush/actions)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
@@ -48,13 +48,13 @@
 </tr>
 </table>
 
-### 🆕 最新更新 (v4.3.2)
+### 🆕 最新更新 (v4.3.3)
 
-- 🎯 **智能剧集合并显示** - 自动识别连续和不连续集数
-  - **连续集数**（1,2,3）显示为 "第1-3集"
-  - **不连续集数**（10,17,25）显示为 "第10,17,25集"
-  - 避免误导性的集数范围显示
-  - 所有推送渠道自动适配新格式
+- 🐛 **修复推送失败问题** - 优化图片降级策略
+  - 修复季度海报缺失导致推送中断的问题
+  - 新增电视剧主海报作为降级方案
+  - 降级顺序：季度海报 → 剧集主海报 → 剧集剧照 → 空字符串
+  - 确保即使图片缺失也能正常推送消息
 
 ---
 
@@ -350,6 +350,12 @@ graph LR
 ---
 
 ## 📝 更新日志
+
+### 🎉 v4.3.3 (2025-10-22)
+
+- 🐛 修复季度海报缺失导致推送失败的问题
+- ✨ 新增电视剧主海报作为降级方案
+- 🎨 优化图片降级策略，提升推送成功率
 
 ### 🎉 v4.3.2 (2025-10-21)
 

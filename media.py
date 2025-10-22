@@ -202,18 +202,31 @@ class Episode(IMedia):
             log.logger.error(err)
             raise Exception(err)
         
+        # 获取季度海报
         poster, err = tmdb_api.get_tv_season_poster(
             self.info_["ProviderIds"]["Tmdb"], self.info_["Season"]
         )
         if err:
-            log.logger.error(err)
-            raise Exception(err)
+            log.logger.warning(err)
+            log.logger.warning("No season poster found. Try to use TV series main poster.")
+            # 降级：使用电视剧主海报
+            poster, err = tmdb_api.get_tv_poster(self.info_["ProviderIds"]["Tmdb"])
+            if err:
+                log.logger.warning(err)
+                log.logger.warning("No TV series poster found either. Will use episode still or empty.")
+                poster = ""
         
+        # 获取剧集剧照
         still, err = tmdb_api.get_tv_episode_still_paths(self.info_["ProviderIds"]["Tmdb"], self.info_["Season"], self.info_["Series"])
         if err:
-            log.logger.error(err)
-            log.logger.warning("No still path found. use poster instead.")
-            still = poster
+            log.logger.warning(err)
+            if poster:
+                log.logger.info("No episode still found. Use poster instead.")
+                still = poster
+            else:
+                log.logger.warning("No still and poster found. Use empty string.")
+                still = ""
+                poster = ""  # 确保 poster 也有值
 
         # tv_datails["air_date"] 为 None 时，查询season的air_date
         if tv_details["air_date"] is None:

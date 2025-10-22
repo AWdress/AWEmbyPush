@@ -143,6 +143,49 @@ def get_movie_poster(tmdb_id):
     return None, err_info
 
 
+def get_tv_details(tmdb_id):
+    """
+    Fetches detailed information about a TV show from TMDB.
+
+    Args:
+      tmdb_id (int): The TMDB ID of the TV show.
+
+    Returns:
+      tuple: A tuple containing the response JSON and an error message (if any).
+        - response_json (dict): The JSON response containing the TV show details.
+        - error_message (str): An error message if the request fails, otherwise None.
+    """
+    tv_url = f"{TMDB_API}/tv/{tmdb_id}?language={TMDB_LANG}"
+    try:
+        response = requests.get(tv_url, headers=TMDB_API_HEADERS)
+        response.raise_for_status()
+        return response.json(), None
+    except requests.exceptions.RequestException as e:
+        return None, f"Failed to fetch TV details for TMDB ID {tmdb_id}. Error: {e}"
+
+
+def get_tv_poster(tmdb_id):
+    """
+    Fetches the main poster URL for a TV show from TMDB.
+
+    Args:
+      tmdb_id (int): The TMDB ID of the TV show.
+
+    Returns:
+      tuple: A tuple containing the poster URL and an error message (if any).
+        - poster_url (str): The URL of the TV show poster.
+        - error_message (str): An error message if the request fails, otherwise None.
+    """
+    tv_details, err_info = get_tv_details(tmdb_id)
+    if tv_details:
+        poster_path = tv_details.get("poster_path")
+        if poster_path:
+            poster_url = f"{TMDB_IMAGE_DOMAIN}/t/p/w500{poster_path}"
+            return poster_url, None
+        return None, f"No poster path found for TV {tmdb_id}."
+    return None, err_info
+
+
 def get_tv_season_details(tmdb_id, season_number):
     """
     Fetches detailed information about a specific season of a TV show from TMDB.

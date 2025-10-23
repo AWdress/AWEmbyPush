@@ -5,24 +5,46 @@ services:
       context: .
       dockerfile: Dockerfile
     image: awdress/awembypush:latest
+    container_name: AWEmbyPush
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
     environment:
       - TZ=Asia/Shanghai
       # 这里所有的环境变量都不要使用引号
+      
       # 必填参数
       - TMDB_API_TOKEN=<Your TMDB API Token>
-      - TG_BOT_TOKEN=<Your Telegram Bot Tokne>
+      
+      # Telegram 配置（可选）
+      - TG_BOT_TOKEN=<Your Telegram Bot Token>
       - TG_CHAT_ID=<Your Telegram Channel's Chat ID>
-      # 可选参数
+      
+      # 企业微信配置（可选）
+      - WECHAT_CORP_ID=xxxxx      # 企业 id
+      - WECHAT_CORP_SECRET=xxxxxx # 应用凭证密钥
+      - WECHAT_AGENT_ID=xxxxx     # 应用 agentid
+      - WECHAT_USER_ID=xxxxxx     # 用户 id，不设置时默认为 "@all"
+      - WECHAT_PROXY_URL=https://qyapi.weixin.qq.com  # 消息转发代理地址，2022年6月20日后创建的自建应用才需要配置
+      - WECHAT_MSG_TYPE=news_notice  # 消息类型，支持 news/news_notice，默认为 news_notice
+      
+      # Bark 配置（可选）
+      - BARK_SERVER=https://api.day.app
+      - BARK_DEVICE_KEYS=<Your Bark Device Keys>
+      
+      # 其他配置（可选）
       - TVDB_API_KEY=<Your TVDB API Key>
-      - LOG_LEVEL=INFO # [DEBUG, INFO, WARNING] 三个等级，默认 INFO
-      - LOG_EXPORT=False # [True, False0] 是否将日志输出到文件，默认 False
-      - LOG_PATH=/var/tmp/awembypush/ # 默认 /var/tmp/awembypush/
-      - WECHAT_CORP_ID=xxxxx      # 企业微信：企业 id
-      - WECHAT_CORP_SECRET=xxxxxx # 企业微信：应用凭证秘钥
-      - WECHAT_AGENT_ID=xxxxx # 企业微信：应用 agentid
-      - WECHAT_USER_ID=xxxxxx # 企业微信：用户 id，不设置时默认为 "@all"
-      - WECHAT_PROXY_URL=https://qyapi.weixin.qq.com  # 企业微信：消息转发代理地址，2022年6月20日后创建的自建应用才需要配置，默认 https://qyapi.weixin.qq.com
-      - WECHAT_MSG_TYPE=news_notice  # 企业微信：消息类型，支持 news/news_notice，不设置默认为 news_notice
+      - LOG_LEVEL=INFO            # [DEBUG, INFO, WARNING] 三个等级，默认 INFO
+      - LOG_EXPORT=False          # [True, False] 是否将日志输出到文件，默认 False
+      - LOG_PATH=/var/tmp/awembypush/  # 日志文件路径
+      
+      # 高级配置（可选）
+      - TG_API_HOST=https://api.telegram.org      # Telegram API 反代地址
+      - TMDB_API_HOST=https://api.themoviedb.org  # TMDB API 反代地址
+      - TMDB_IMAGE_DOMAIN=https://image.tmdb.org  # TMDB 图片加速源
+      - EPISODE_CACHE_TIMEOUT=30  # 电视剧集缓存时间（秒）
+    
+    # volumes:  # 取消注释以启用日志持久化
+    #   - ./logs:/var/tmp/awembypush
+    
     network_mode: "bridge"
-    ports:
-      - "8000:8000"

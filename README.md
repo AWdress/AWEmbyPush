@@ -72,12 +72,28 @@
 
 ```bash
 docker run -d \
-  --name awembypush \
+  --name AWEmbyPush \
   --restart unless-stopped \
-    -p 8000:8000 \
+  -p 8000:8000 \
+  -e TZ=Asia/Shanghai \
   -e TMDB_API_TOKEN=你的TMDB_TOKEN \
-  -e TG_BOT_TOKEN=你的TG_BOT_TOKEN \
-  -e TG_CHAT_ID=你的TG_CHAT_ID \
+  -e TG_BOT_TOKEN=你的BOT_TOKEN \
+  -e TG_CHAT_ID=你的CHAT_ID \
+  -e WECHAT_CORP_ID=企业ID \
+  -e WECHAT_CORP_SECRET=应用密钥 \
+  -e WECHAT_AGENT_ID=应用AgentID \
+  -e WECHAT_USER_ID=@all \
+  -e WECHAT_PROXY_URL=https://qyapi.weixin.qq.com \
+  -e WECHAT_MSG_TYPE=news_notice \
+  -e BARK_SERVER=https://api.day.app \
+  -e BARK_DEVICE_KEYS=你的设备KEY \
+  -e LOG_LEVEL=INFO \
+  -e LOG_EXPORT=False \
+  -e LOG_PATH=/var/tmp/awembypush/ \
+  -e TG_API_HOST=https://api.telegram.org \
+  -e TMDB_API_HOST=https://api.themoviedb.org \
+  -e TMDB_IMAGE_DOMAIN=https://image.tmdb.org \
+  -e EPISODE_CACHE_TIMEOUT=30 \
   awdress/awembypush:latest
 ```
 
@@ -90,7 +106,7 @@ version: '3'
 services:
   awembypush:
     image: awdress/awembypush:latest
-    container_name: awembypush
+    container_name: AWEmbyPush
     restart: unless-stopped
     ports:
       - "8000:8000"

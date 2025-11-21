@@ -4,7 +4,7 @@
 
 **优雅的 Emby/Jellyfin 媒体库更新通知服务**
 
-[![GitHub release](https://img.shields.io/badge/release-v4.3.3-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
+[![GitHub release](https://img.shields.io/badge/release-v4.3.4-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
 [![Docker](https://img.shields.io/badge/docker-awdress%2Fawembypush-blue.svg)](https://hub.docker.com/r/awdress/awembypush)
 [![Build Status](https://github.com/AWdress/AWEmbyPush/actions/workflows/docker-build.yml/badge.svg)](https://github.com/AWdress/AWEmbyPush/actions)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
@@ -366,6 +366,11 @@ graph LR
 ---
 
 ## 📝 更新日志
+
+### 🎉 v4.3.4 (2025-11-21)
+
+- 🐛 修复剧集合并显示问题：避免出现“第10,10集”，同一集号只显示一次
+- 🛡 优化 TMDB 异常处理：网络/SSL/Token 问题时仅记录日志，不再中断推送流程
 
 ### 🎉 v4.3.3 (2025-10-22)
 

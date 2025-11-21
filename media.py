@@ -62,7 +62,7 @@ class IMedia(abc.ABC):
         )
         if err:
             log.logger.error(err)
-            raise Exception(err)
+            return
         Tvdb_id = self.info_["ProviderIds"].get("Tvdb", "-1")
         for m in medias:
             ext_ids, err = tmdb_api.get_external_ids(self.info_["Type"], m["id"])

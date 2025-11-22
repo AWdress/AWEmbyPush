@@ -57,6 +57,17 @@ class EpisodeCache:
                     unique_episodes[ep_num] = ep
 
             episodes_dedup = [unique_episodes[num] for num in sorted(unique_episodes.keys())]
+            
+            # 去重后如果只有一集，按单集发送，避免出现"共1集"的合并展示
+            if len(episodes_dedup) == 1:
+                single = episodes_dedup[0]
+                log.logger.info(
+                    f"📺 发送单集：{single.get('media_name')} "
+                    f"S{single.get('tv_season')}E{single.get('tv_episode')}"
+                )
+                sender.Sender.send_media_details(single)
+                return
+            
             episode_numbers = [ep.get('tv_episode') for ep in episodes_dedup]
             first_ep = episode_numbers[0]
             last_ep = episode_numbers[-1]
@@ -83,7 +94,7 @@ class EpisodeCache:
             merged_media['tv_episode_continuous'] = is_continuous
             
             log.logger.info(
-                f"📺 合并发送 {len(episodes)} 集：{merged_media.get('media_name')} "
+                f"📺 合并发送 {len(episodes_dedup)} 集：{merged_media.get('media_name')} "
                 f"S{merged_media.get('tv_season')} 第{episode_range}集"
             )
             
@@ -107,17 +118,27 @@ class EpisodeCache:
             if cache_key in self.timers:
                 self.timers[cache_key].cancel()
             
-            # 添加到缓存
+            # 添加到缓存（按集数去重）
             if cache_key not in self.cache:
                 self.cache[cache_key] = []
             
-            self.cache[cache_key].append(media_detail)
+            # 检查是否已缓存同一季同一集号，若已存在则不重复加入
+            existing_eps = [ep.get('tv_episode') for ep in self.cache[cache_key]]
+            current_ep_num = media_detail.get('tv_episode')
             
-            log.logger.info(
-                f"📺 缓存剧集：{media_detail.get('media_name')} "
-                f"S{media_detail.get('tv_season')}E{media_detail.get('tv_episode')} "
-                f"(当前缓存 {len(self.cache[cache_key])} 集)"
-            )
+            if current_ep_num in existing_eps:
+                log.logger.info(
+                    f"📺 剧集已在缓存中，跳过重复缓存：{media_detail.get('media_name')} "
+                    f"S{media_detail.get('tv_season')}E{media_detail.get('tv_episode')} "
+                    f"(当前缓存 {len(self.cache[cache_key])} 集)"
+                )
+            else:
+                self.cache[cache_key].append(media_detail)
+                log.logger.info(
+                    f"📺 缓存剧集：{media_detail.get('media_name')} "
+                    f"S{media_detail.get('tv_season')}E{media_detail.get('tv_episode')} "
+                    f"(当前缓存 {len(self.cache[cache_key])} 集)"
+                )
             
             # 设置新的定时器
             timer = threading.Timer(CACHE_TIMEOUT, self._merge_and_send, args=[cache_key])

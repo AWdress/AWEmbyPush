@@ -9,6 +9,12 @@ from sender import Sender
 from episode_cache import episode_cache_manager
 
 from datetime import datetime
+import threading
+
+# 消息去重：记录最近处理过的消息指纹
+_message_fingerprints = {}
+_fingerprint_lock = threading.Lock()
+MESSAGE_DEDUP_WINDOW = int(os.getenv("MESSAGE_DEDUP_WINDOW", "60"))  # 默认60秒去重窗口
 
 
 class IMedia(abc.ABC):
@@ -336,6 +342,28 @@ def process_media(emby_media_info):
     emby_media_info = jellyfin_msg_preprocess(emby_media_info)
     if not emby_media_info:
         return
+    
+    # 生成消息指纹用于去重
+    fingerprint = f"{emby_media_info['Title']}_{emby_media_info.get('Event', 'unknown')}"
+    current_time = time.time()
+    
+    with _fingerprint_lock:
+        # 清理过期的指纹记录
+        expired_keys = [k for k, v in _message_fingerprints.items() if current_time - v > MESSAGE_DEDUP_WINDOW]
+        for k in expired_keys:
+            del _message_fingerprints[k]
+        
+        # 检查是否为重复消息
+        if fingerprint in _message_fingerprints:
+            time_since_last = current_time - _message_fingerprints[fingerprint]
+            log.logger.info(
+                f"⏭️ 跳过重复消息（{time_since_last:.1f}秒前已处理）: {emby_media_info['Title']}"
+            )
+            return
+        
+        # 记录新消息指纹
+        _message_fingerprints[fingerprint] = current_time
+    
     log.logger.info(f"Received message: {emby_media_info['Title']}")
     if emby_media_info["Event"] != "library.new":
         log.logger.warning(f"Unsupported event type: {emby_media_info['Event']}")

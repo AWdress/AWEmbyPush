@@ -4,7 +4,7 @@
 
 **优雅的 Emby/Jellyfin 媒体库更新通知服务**
 
-[![GitHub release](https://img.shields.io/badge/release-v4.3.4-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
+[![GitHub release](https://img.shields.io/badge/release-v4.3.5-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
 [![Docker](https://img.shields.io/badge/docker-awdress%2Fawembypush-blue.svg)](https://hub.docker.com/r/awdress/awembypush)
 [![Build Status](https://github.com/AWdress/AWEmbyPush/actions/workflows/docker-build.yml/badge.svg)](https://github.com/AWdress/AWEmbyPush/actions)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
@@ -48,13 +48,14 @@
 </tr>
 </table>
 
-### 🆕 最新更新 (v4.3.3)
+### 🆕 最新更新 (v4.3.5)
 
-- 🐛 **修复推送失败问题** - 优化图片降级策略
-  - 修复季度海报缺失导致推送中断的问题
-  - 新增电视剧主海报作为降级方案
-  - 降级顺序：季度海报 → 剧集主海报 → 剧集剧照 → 空字符串
-  - 确保即使图片缺失也能正常推送消息
+- � **新增消息去重机制** - 彻底解决重复推送问题
+  - 60秒内相同消息只处理一次，自动拦截 Emby/Jellyfin 重复推送
+  - 同一集在缓存中只保留一份，避免重复计数
+  - 单集不再显示"共1集"，改为正常单集展示
+  - 电影重复推送自动拦截，避免骚扰通知
+  - 新增 `MESSAGE_DEDUP_WINDOW` 环境变量，可自定义去重时间窗口
 
 ---
 
@@ -94,6 +95,7 @@ docker run -d \
   -e TMDB_API_HOST=https://api.themoviedb.org \
   -e TMDB_IMAGE_DOMAIN=https://image.tmdb.org \
   -e EPISODE_CACHE_TIMEOUT=30 \
+  -e MESSAGE_DEDUP_WINDOW=60 \
   awdress/awembypush:latest
 ```
 
@@ -141,6 +143,7 @@ services:
       - TMDB_API_HOST=https://api.themoviedb.org  # TMDB API 反代地址
       - TMDB_IMAGE_DOMAIN=https://image.tmdb.org  # TMDB 图片加速源
       - EPISODE_CACHE_TIMEOUT=30  # 电视剧集缓存时间（秒）
+      - MESSAGE_DEDUP_WINDOW=60  # 消息去重时间窗口（秒）
 ```
 
 启动服务：
@@ -223,6 +226,7 @@ docker-compose up -d
 | `TMDB_API_HOST` | 🆕 TMDB API 反代地址 | `https://api.themoviedb.org` |
 | `TMDB_IMAGE_DOMAIN` | TMDB 图片加速源 | `https://image.tmdb.org` |
 | `EPISODE_CACHE_TIMEOUT` | 🆕 电视剧集缓存时间（秒） | `30` |
+| `MESSAGE_DEDUP_WINDOW` | 🆕 消息去重时间窗口（秒） | `60` |
 
 <details>
 <summary>💡 高级配置说明</summary>
@@ -242,6 +246,12 @@ docker-compose up -d
 - 例如：添加第15、16、17集 → 推送显示为 "第15-17集 (共3集)"
 - 默认缓存时间30秒，可通过 `EPISODE_CACHE_TIMEOUT` 调整
 - 单独添加一集时仍然正常推送，不受影响
+
+**消息去重机制**
+- 防止 Emby/Jellyfin 在短时间内重复推送同一条消息
+- 默认60秒内相同消息只处理一次，可通过 `MESSAGE_DEDUP_WINDOW` 调整
+- 自动拦截重复的电影和剧集通知，避免骚扰
+- 适用于网盘挂载等可能导致重复扫描的场景
 
 </details>
 
@@ -367,9 +377,17 @@ graph LR
 
 ## 📝 更新日志
 
+### 🎉 v4.3.5 (2025-11-22)
+
+- 🚀 新增消息去重机制：60秒内相同消息只处理一次，彻底解决 Emby/Jellyfin 重复推送问题
+- 🎯 优化剧集缓存逻辑：同一集在缓存中只保留一份，避免重复计数
+- 🐛 修复单集显示问题：单集不再显示"共1集"，改为正常单集展示
+- ✨ 电影重复推送自动拦截：通过消息指纹识别，避免重复通知
+- 📊 新增环境变量 `MESSAGE_DEDUP_WINDOW`：可自定义消息去重时间窗口（默认60秒）
+
 ### 🎉 v4.3.4 (2025-11-21)
 
-- 🐛 修复剧集合并显示问题：避免出现“第10,10集”，同一集号只显示一次
+- 🐛 修复剧集合并显示问题：避免出现"第10,10集"，同一集号只显示一次
 - 🛡 优化 TMDB 异常处理：网络/SSL/Token 问题时仅记录日志，不再中断推送流程
 
 ### 🎉 v4.3.3 (2025-10-22)

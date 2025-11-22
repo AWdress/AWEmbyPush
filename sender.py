@@ -75,7 +75,7 @@ class TelegramSender(MessageSender):
             title = media["media_name"]
         else:
             episode_text = f"已更新至 第{media['tv_season']}季 第{media['tv_episode']}集\n" if media["media_type"] == "Episode" else ""
-            title = media["media_name"] if media["media_type"] == "Movie" else f"{media['media_name']} {media['tv_episode_name']}"
+            title = media["media_name"]
         
         caption = caption.format(
             server_name=server_name,

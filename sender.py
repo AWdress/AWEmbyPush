@@ -93,9 +93,12 @@ class TelegramSender(MessageSender):
         caption += f"{date_label}：{release_date}\n"
         caption += "\n"
         
-        # 简介 - 使用引用格式
+        # 简介 - 使用 Markdown 引用格式
         if media.get('media_intro'):
-            caption += f"📝 内容简介：\n>{media['media_intro']}\n\n"
+            # 将简介的每一行前面加上 > 符号
+            intro_lines = media['media_intro'].split('\n')
+            quoted_intro = '\n'.join([f">{line}" if line.strip() else ">" for line in intro_lines])
+            caption += f"📝 内容简介：\n{quoted_intro}\n\n"
         
         caption += f"─────────────────────\n\n"
         
@@ -165,15 +168,25 @@ class WechatAppSender(MessageSender):
                 },
                 "vertical_content_list": [
                     {
+                        "title": "� 主演",
+                        "desc": f"{media.get('media_cast', '未知')}",
+                    },
+                    {
+                        "title": "📺 类型",
+                        "desc": type_text,
+                    },
+                    {
+                        "title": "⭐ 评分",
+                        "desc": f"{media.get('media_rating')}",
+                    },
+                    {
+                        "title": date_label,
+                        "desc": release_date,
+                    },
+                    {
                         "title": "📝 内容简介",
                         "desc": f"{media.get('media_intro')}",
                     }
-                ],
-                "horizontal_content_list": [
-                    {"keyname": "👥 主演", "value": f"{media.get('media_cast', '未知')}"},
-                    {"keyname": "📺 类型", "value": type_text},
-                    {"keyname": "⭐ 评分", "value": f"{media.get('media_rating')}"},
-                    {"keyname": date_label, "value": release_date},
                 ],
             }
             

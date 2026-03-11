@@ -4,7 +4,7 @@
 
 **优雅的 Emby/Jellyfin 媒体库更新通知服务**
 
-[![GitHub release](https://img.shields.io/badge/release-v4.3.5-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
+[![GitHub release](https://img.shields.io/badge/release-v4.4.0-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
 [![Docker](https://img.shields.io/badge/docker-awdress%2Fawembypush-blue.svg)](https://hub.docker.com/r/awdress/awembypush)
 [![Build Status](https://github.com/AWdress/AWEmbyPush/actions/workflows/docker-build.yml/badge.svg)](https://github.com/AWdress/AWEmbyPush/actions)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
@@ -48,14 +48,29 @@
 </tr>
 </table>
 
-### 🆕 最新更新 (v4.3.5)
+### 🆕 最新更新 (v4.4.0)
 
-- � **新增消息去重机制** - 彻底解决重复推送问题
-  - 60秒内相同消息只处理一次，自动拦截 Emby/Jellyfin 重复推送
-  - 同一集在缓存中只保留一份，避免重复计数
-  - 单集不再显示"共1集"，改为正常单集展示
-  - 电影重复推送自动拦截，避免骚扰通知
-  - 新增 `MESSAGE_DEDUP_WINDOW` 环境变量，可自定义去重时间窗口
+- 🎨 **Netflix 风格通知** - 全新的通知样式设计
+  - 采用 Netflix 风格的卡片布局，更现代、更专业
+  - 宽屏剧照/背景图展示，视觉冲击力更强
+  - 优化信息层次，状态提示更清晰（"新剧集已上线"/"新电影已上线"）
+  - 元数据横向排列（评分 | 类型 | 年份），一目了然
+  
+- 🔗 **立即观看按钮** - 可选的快速跳转功能
+  - 新增 `ENABLE_WATCH_LINK` 环境变量控制（默认关闭）
+  - 支持直接跳转到媒体服务器
+  - Jellyfin 自动获取服务器地址
+  - Emby 用户可通过 `EMBY_SERVER_URL` 配置服务器地址
+  
+- 🐛 **Bug 修复** - 提升稳定性
+  - 修复 `media_rel` 为 None 时的崩溃问题
+  - 完善边界情况处理，避免空值错误
+  - 优化图片选择逻辑，支持降级策略
+
+- 📝 **文档完善** - 更易用
+  - 新增 Netflix 风格配置文档
+  - 新增测试脚本和 Bug 检查报告
+  - 完善环境变量说明
 
 ---
 
@@ -96,6 +111,8 @@ docker run -d \
   -e TMDB_IMAGE_DOMAIN=https://image.tmdb.org \
   -e EPISODE_CACHE_TIMEOUT=30 \
   -e MESSAGE_DEDUP_WINDOW=60 \
+  -e ENABLE_WATCH_LINK=false \
+  -e EMBY_SERVER_URL=https://emby.media \
   awdress/awembypush:latest
 ```
 
@@ -144,6 +161,10 @@ services:
       - TMDB_IMAGE_DOMAIN=https://image.tmdb.org  # TMDB 图片加速源
       - EPISODE_CACHE_TIMEOUT=30  # 电视剧集缓存时间（秒）
       - MESSAGE_DEDUP_WINDOW=60  # 消息去重时间窗口（秒）
+      
+      # Netflix 风格配置（可选）
+      - ENABLE_WATCH_LINK=false  # 是否显示"立即观看"按钮（默认关闭）
+      - EMBY_SERVER_URL=https://emby.media  # Emby 服务器地址（仅 Emby 用户需要）
 ```
 
 启动服务：
@@ -227,12 +248,28 @@ docker-compose up -d
 | `TMDB_IMAGE_DOMAIN` | TMDB 图片加速源 | `https://image.tmdb.org` |
 | `EPISODE_CACHE_TIMEOUT` | 🆕 电视剧集缓存时间（秒） | `30` |
 | `MESSAGE_DEDUP_WINDOW` | 🆕 消息去重时间窗口（秒） | `60` |
+| `ENABLE_WATCH_LINK` | 🆕 启用"立即观看"按钮 | `false` |
+| `EMBY_SERVER_URL` | 🆕 Emby 服务器地址 | `https://emby.media` |
 
 <details>
 <summary>💡 高级配置说明</summary>
 
 **API 反代配置**
 - 如果您在国内访问 Telegram 或 TMDB 遇到网络问题，可以配置反代地址
+
+**Netflix 风格配置**
+- `ENABLE_WATCH_LINK`: 控制是否显示"立即观看"按钮（默认关闭，避免暴露服务器地址）
+- `EMBY_SERVER_URL`: Emby 用户需要配置服务器地址（Jellyfin 自动获取）
+
+**示例**：
+```bash
+# 开启"立即观看"按钮（Jellyfin 用户）
+ENABLE_WATCH_LINK=true
+
+# 开启"立即观看"按钮（Emby 用户）
+ENABLE_WATCH_LINK=true
+EMBY_SERVER_URL=https://your-emby-server.com:8096
+```
 - 例如：`TG_API_HOST=https://your-tg-proxy.com`
 - 例如：`TMDB_API_HOST=https://your-tmdb-proxy.com`
 

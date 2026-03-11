@@ -8,8 +8,8 @@ import sender
 from sender import Sender
 
 AUTHOR = "Awhitedress"
-VERSION = "4.3.5"
-UPDATETIME = "2025-11-22"
+VERSION = "4.4.0"
+UPDATETIME = "2026-03-11"
 DESCRIPTION = "AWEmbyPush 是一个优雅的 Emby/Jellyfin 媒体库更新通知服务"
 REPOSITORY = "https://github.com/AWdress/AWEmbyPush"
 THANKS_TO = "基于 xu4n_ch3n 的 Emby_Notifier 项目"
@@ -78,12 +78,16 @@ def env_check():
     print("\n━━━━━━━━ 🔔 Bark 推送配置 ━━━━━━━━")
     print(f"{'BARK_SERVER:':<25} {'[可选]':<8} {os.getenv('BARK_SERVER', 'https://api.day.app')}")
     print(f"{'BARK_DEVICE_KEYS:':<25} {'[可选]':<8} {os.getenv('BARK_DEVICE_KEYS', '⚪ 未配置')}")
+    print("\n━━━━━━━━ 🎬 媒体服务器配置 ━━━━━━━━")
+    print(f"{'EMBY_SERVER_URL:':<25} {'[可选]':<8} {os.getenv('EMBY_SERVER_URL', 'https://emby.media')}")
+    print(f"{'ENABLE_WATCH_LINK:':<25} {'[可选]':<8} {os.getenv('ENABLE_WATCH_LINK', 'false')}")
     print("\n━━━━━━━━ 📝 日志配置 ━━━━━━━━")
     print(f"{'LOG_LEVEL:':<25} {'[可选]':<8} {os.getenv('LOG_LEVEL', 'INFO')}")
     print(f"{'LOG_EXPORT:':<25} {'[可选]':<8} {os.getenv('LOG_EXPORT', 'False')}")
     print(f"{'LOG_PATH:':<25} {'[可选]':<8} {os.getenv('LOG_PATH', '/var/tmp/awembypush')}")
     print("\n━━━━━━━━ ⚙️  高级配置 ━━━━━━━━")
     print(f"{'EPISODE_CACHE_TIMEOUT:':<25} {'[可选]':<8} {os.getenv('EPISODE_CACHE_TIMEOUT', '30')}秒")
+    print(f"{'MESSAGE_DEDUP_WINDOW:':<25} {'[可选]':<8} {os.getenv('MESSAGE_DEDUP_WINDOW', '60')}秒")
 
     # 检查媒体数据库信息
     try:

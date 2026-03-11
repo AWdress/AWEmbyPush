@@ -51,46 +51,63 @@ class TelegramSender(MessageSender):
         tgbot.send_message(test_content)
 
     def send_media_details(self, media: dict):
-        caption = (
-            "#影视更新 #{server_name}\n"
-            + "\[{type_ch}]\n"
-            + "片名： *{title}* ({year})\n"
-            + "{episode}"
-            + "评分： {rating}\n\n"
-            + "上映日期： {rel}\n\n"
-            + "内容简介： {intro}\n\n"
-            + "相关链接： [TMDB]({tmdb_url})\n"
-        )
+        # Netflix 风格设计
         server_name = media["server_name"]
         for ch in ["_", "*", "`", "["]:
             server_name = server_name.replace(ch, f"\\{ch}")
         
-        # 处理合并剧集的显示
-        if media.get("tv_episode_merged"):
-            # 区分连续和不连续集数的显示
-            if media.get("tv_episode_continuous"):
-                episode_text = f"已更新至 第{media['tv_season']}季 第{media['tv_episode_range']}集 (共{media['tv_episode_count']}集)\n"
+        # 处理剧集信息
+        if media["media_type"] == "Episode":
+            if media.get("tv_episode_merged"):
+                # 合并剧集
+                episode_info = f"第{media['tv_season']}季：第{media['tv_episode_range']}集"
+                status_text = "新剧集已上线"
             else:
-                episode_text = f"已更新 第{media['tv_season']}季 第{media['tv_episode_range']}集 (共{media['tv_episode_count']}集)\n"
-            title = media["media_name"]
+                # 单集
+                episode_info = f"第{media['tv_season']}季：第{media['tv_episode']}集"
+                status_text = "新剧集已上线"
         else:
-            episode_text = f"已更新至 第{media['tv_season']}季 第{media['tv_episode']}集\n" if media["media_type"] == "Episode" else ""
-            title = media["media_name"]
+            # 电影
+            episode_info = ""
+            status_text = "新电影已上线"
         
-        caption = caption.format(
-            server_name=server_name,
-            type_ch="电影" if media["media_type"] == "Movie" else "剧集",
-            title=title,
-            # 部分电视剧没有 air_date 导致无法获取当前剧集的上映年份，增加年份字段判断保护
-            year=media["media_rel"][0:4] if media["media_rel"] else "Unknown",
-            episode=episode_text,
-            rating=media["media_rating"],
-            rel=media["media_rel"],
-            intro=media["media_intro"],
-            tmdb_url=media["media_tmdburl"],
-        )
-        poster = media["media_poster"]
-        tgbot.send_photo(caption, poster)
+        # 构建 Netflix 风格的文案
+        type_emoji = "📺" if media["media_type"] == "Episode" else "🎬"
+        type_text = "剧集" if media["media_type"] == "Episode" else "电影"
+        year = media["media_rel"][0:4] if media["media_rel"] else "Unknown"
+        
+        # 标题部分
+        caption = f"🎬 {server_name}\n\n"
+        caption += f"{status_text}\n\n"
+        caption += f"*{media['media_name']}*\n"
+        caption += f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        
+        # 剧集信息（如果是剧集）
+        if episode_info:
+            caption += f"{episode_info}\n\n"
+        
+        # 元数据行
+        caption += f"⭐ {media['media_rating']} | {type_emoji} {type_text} | 🗓️ {year}\n\n"
+        
+        # 简介
+        caption += f"{media['media_intro']}\n\n"
+        
+        # 底部链接 - 根据开关决定是否显示"立即观看"
+        enable_watch_link = os.getenv("ENABLE_WATCH_LINK", "false").lower() == "true"
+        if enable_watch_link:
+            caption += f"▶️ [立即观看]({media['server_url']}) | ℹ️ [了解更多]({media['media_tmdburl']})\n"
+        else:
+            caption += f"ℹ️ [了解更多]({media['media_tmdburl']})\n"
+        
+        # 使用剧照（Episode）或背景图（Movie）作为宽屏展示
+        if media["media_type"] == "Episode":
+            # 优先使用剧照，如果没有则使用海报
+            photo = media.get("media_still") or media.get("media_backdrop") or media.get("media_poster")
+        else:
+            # 电影使用背景图
+            photo = media.get("media_backdrop") or media.get("media_poster")
+        
+        tgbot.send_photo(caption, photo)
 
 
 class WechatAppSender(MessageSender):
@@ -105,65 +122,88 @@ class WechatAppSender(MessageSender):
 
     def send_media_details(self, media: dict):
         msgtype = os.getenv("WECHAT_MSG_TYPE", "news_notice")
+        enable_watch_link = os.getenv("ENABLE_WATCH_LINK", "false").lower() == "true"
+        
+        # Netflix 风格：构建剧集信息
+        if media.get("media_type") == "Episode":
+            if media.get("tv_episode_merged"):
+                episode_text = f"第{media.get('tv_season')}季：第{media.get('tv_episode_range')}集"
+                status_text = "新剧集已上线"
+            else:
+                episode_text = f"第{media.get('tv_season')}季：第{media.get('tv_episode')}集"
+                status_text = "新剧集已上线"
+        else:
+            episode_text = ""
+            status_text = "新电影已上线"
+        
         if msgtype == "news_notice":
+            # Netflix 风格卡片
             card_details = {
                 "card_type": "news_notice",
                 "source": {
                     "icon_url": f"https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/{media.get('server_type', 'Emby').lower()}.png",
-                    "desc": f"{media.get('server_type')} Server",
+                    "desc": f"🎬 {media.get('server_name')}",
                     "desc_color": 0,
                 },
                 "main_title": {
-                    "title": f"#{media.get('server_name')} 影视更新",
+                    "title": f"{status_text}",
+                    "desc": f"{media.get('media_name')}"
                 },
                 "card_image": {
-                    "url": f"{media.get('media_backdrop') if media.get('media_type') == 'Movie' else media.get('media_still')}",
+                    # 使用宽屏图片（剧照或背景图）
+                    "url": f"{media.get('media_still') if media.get('media_type') == 'Episode' else media.get('media_backdrop')}",
                     "aspect_ratio": 2.25,
                 },
                 "vertical_content_list": [
                     {
-                        "title": f"[{'电影' if media.get('media_type') == 'Movie' else '剧集'}] {media.get('media_name')} ({media.get('media_rel')[:4]})"
-                        + (
-                            f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode_range')} 集 (共{media.get('tv_episode_count')}集)"
-                            if media.get("tv_episode_merged")
-                            else (
-                                f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode')} 集"
-                                if media.get("media_type") == "Episode"
-                                else ""
-                            )
-                        ),
+                        "title": episode_text if episode_text else f"{media.get('media_name')}",
                         "desc": f"{media.get('media_intro')}",
                     }
                 ],
                 "horizontal_content_list": [
-                    {"keyname": "上映日期", "value": f"{media.get('media_rel')}"},
-                    {"keyname": "评分", "value": f"{media.get('media_rating')}"},
+                    {"keyname": "⭐ 评分", "value": f"{media.get('media_rating')}"},
+                    {"keyname": "📺 类型", "value": f"{'剧集' if media.get('media_type') == 'Episode' else '电影'}"},
+                    {"keyname": "🗓️ 年份", "value": f"{media.get('media_rel')[:4] if media.get('media_rel') else 'Unknown'}"},
                 ],
-                "jump_list": [
+            }
+            
+            # 根据开关决定是否添加"立即观看"按钮
+            if enable_watch_link:
+                card_details["jump_list"] = [
+                    {
+                        "type": 1,
+                        "url": f"{media.get('server_url')}",
+                        "title": "▶️ 立即观看",
+                    },
                     {
                         "type": 1,
                         "url": f"{media.get('media_tmdburl')}",
-                        "title": "TMDB",
+                        "title": "ℹ️ 了解更多",
                     },
-                ],
-                "card_action": {"type": 1, "url": f"{media.get('server_url')}"},
-            }
+                ]
+                card_details["card_action"] = {"type": 1, "url": f"{media.get('server_url')}"}
+            else:
+                card_details["jump_list"] = [
+                    {
+                        "type": 1,
+                        "url": f"{media.get('media_tmdburl')}",
+                        "title": "ℹ️ 了解更多",
+                    },
+                ]
+                card_details["card_action"] = {"type": 1, "url": f"{media.get('media_tmdburl')}"}
+            
             wxapp.send_news_notice(card_details)
         elif msgtype == "news":
+            # Netflix 风格 news 类型
+            title_text = f"🎬 {status_text} | {media.get('media_name')}"
+            if episode_text:
+                title_text += f" | {episode_text}"
+            
             article = {
-                "title" : f"[影视更新][{'电影' if media.get('media_type') == 'Movie' else '剧集'}] {media.get('media_name')} ({media.get('media_rel')[:4]})"
-                            + (
-                                f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode_range')} 集 (共{media.get('tv_episode_count')}集)"
-                                if media.get("tv_episode_merged")
-                                else (
-                                    f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode')} 集"
-                                    if media.get("media_type") == "Episode"
-                                    else ""
-                                )
-                            ),
-                "description" : f"{media.get('media_intro')}",
-                "url" : f"{media.get('media_tmdburl')}",
-                "picurl" : f"{media.get('media_backdrop') if media.get('media_type') == 'Movie' else media.get('media_still')}"
+                "title": title_text,
+                "description": f"⭐ {media.get('media_rating')} | 🗓️ {media.get('media_rel')[:4] if media.get('media_rel') else 'Unknown'} | {media.get('media_intro')}",
+                "url": f"{media.get('media_tmdburl')}",
+                "picurl": f"{media.get('media_still') if media.get('media_type') == 'Episode' else media.get('media_backdrop')}"
             }
             wxapp.send_news(article)
 
@@ -191,15 +231,24 @@ class BarkSender(MessageSender):
         bark.send_message(payload)
 
     def send_media_details(self, media: dict):
-        episode_info = ""
-        if media.get("tv_episode_merged"):
-            episode_info = f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode_range')} 集 (共{media.get('tv_episode_count')}集)"
-        elif media.get("media_type") == "Episode":
-            episode_info = f" 第 {media.get('tv_season')} 季 | 第 {media.get('tv_episode')} 集"
+        # Netflix 风格：构建剧集信息
+        year = media.get('media_rel')[:4] if media.get('media_rel') else 'Unknown'
+        
+        if media.get("media_type") == "Episode":
+            if media.get("tv_episode_merged"):
+                episode_info = f"第{media.get('tv_season')}季：第{media.get('tv_episode_range')}集"
+                status_text = "新剧集"
+            else:
+                episode_info = f"第{media.get('tv_season')}季：第{media.get('tv_episode')}集"
+                status_text = "新剧集"
+            body_text = f"{episode_info}已上线 | ⭐ {media['media_rating']} | {media.get('server_name')}"
+        else:
+            status_text = "新电影"
+            body_text = f"⭐ {media['media_rating']} | 🗓️ {year} | {media.get('server_name')}"
         
         payload = {
-            "title": f"🎬 #{media.get('server_name')} 影视更新",
-            "body": f"[{'电影' if media['media_type'] == 'Movie' else '剧集'}] {media['media_name']} ({media['media_rel'][:4]})" + episode_info,
+            "title": f"🎬 {status_text} | {media['media_name']}",
+            "body": body_text,
             "icon": f"https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/{media.get('server_type', 'Emby').lower()}.png",
             "url": f"{media['media_tmdburl']}",
         }

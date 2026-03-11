@@ -168,7 +168,7 @@ class WechatAppSender(MessageSender):
                 },
                 "vertical_content_list": [
                     {
-                        "title": "� 主演",
+                        "title": "👥 主演",
                         "desc": f"{media.get('media_cast', '未知')}",
                     },
                     {
@@ -226,7 +226,7 @@ class WechatAppSender(MessageSender):
             
             article = {
                 "title": title_text,
-                "description": f"👥 主演：{media.get('media_cast', '未知')}\n📺 类型：{type_text} | ⭐ 评分：{media.get('media_rating')} | {date_label}：{release_date}\n\n📝 内容简介：{media.get('media_intro')}",
+                "description": f"👥 主演：{media.get('media_cast', '未知')}\n📺 类型：{type_text}\n⭐ 评分：{media.get('media_rating')}\n{date_label}：{release_date}\n\n📝 内容简介：{media.get('media_intro')}",
                 "url": f"{media.get('media_tmdburl')}",
                 "picurl": f"{media.get('media_still') if media.get('media_type') == 'Episode' else media.get('media_backdrop')}"
             }

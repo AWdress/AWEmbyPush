@@ -68,8 +68,9 @@ class TelegramSender(MessageSender):
             status_text = "新片速递"
         
         # 构建文案
-        type_text = "剧集" if media["media_type"] == "Episode" else "电影"
+        type_text = media.get("media_genres", "剧集" if media["media_type"] == "Episode" else "电影")
         release_date = media["media_rel"] if media["media_rel"] else "Unknown"
+        date_label = "📺 首播" if media["media_type"] == "Episode" else "🎬 上映"
         
         # 标题部分 - 服务器名称 | 状态
         caption = f"*{server_name} | {status_text}*\n\n"
@@ -85,13 +86,16 @@ class TelegramSender(MessageSender):
             caption += "\n"
         
         # 元数据 - 分行显示
-        caption += f"⭐ 评分：{media['media_rating']}\n"
+        if media.get('media_cast'):
+            caption += f"👥 主演：{media['media_cast']}\n"
         caption += f"📺 类型：{type_text}\n"
-        caption += f"📅 日期：{release_date}\n\n"
+        caption += f"⭐ 评分：{media['media_rating']}\n"
+        caption += f"{date_label}：{release_date}\n"
+        caption += "\n"
         
-        # 简介
+        # 简介 - 使用引用格式
         if media.get('media_intro'):
-            caption += f"📝 内容简介：\n{media['media_intro']}\n\n"
+            caption += f"📝 内容简介：\n>{media['media_intro']}\n\n"
         
         caption += f"─────────────────────\n\n"
         
@@ -133,13 +137,13 @@ class WechatAppSender(MessageSender):
             else:
                 episode_text = f"第{media.get('tv_season')}季：第{media.get('tv_episode')}集"
                 status_text = "新剧速递"
-            type_text = "剧集"
         else:
             episode_text = ""
             status_text = "新片速递"
-            type_text = "电影"
         
+        type_text = media.get("media_genres", "剧集" if media.get("media_type") == "Episode" else "电影")
         release_date = media.get('media_rel') if media.get('media_rel') else 'Unknown'
+        date_label = "📺 首播" if media.get("media_type") == "Episode" else "🎬 上映"
         
         if msgtype == "news_notice":
             # 卡片样式
@@ -166,9 +170,10 @@ class WechatAppSender(MessageSender):
                     }
                 ],
                 "horizontal_content_list": [
-                    {"keyname": "⭐ 评分", "value": f"{media.get('media_rating')}"},
+                    {"keyname": "👥 主演", "value": f"{media.get('media_cast', '未知')}"},
                     {"keyname": "📺 类型", "value": type_text},
-                    {"keyname": "📅 日期", "value": release_date},
+                    {"keyname": "⭐ 评分", "value": f"{media.get('media_rating')}"},
+                    {"keyname": date_label, "value": release_date},
                 ],
             }
             
@@ -204,9 +209,11 @@ class WechatAppSender(MessageSender):
             if episode_text:
                 title_text += f" | {episode_text}"
             
+            date_label = "📺 首播" if media.get("media_type") == "Episode" else "🎬 上映"
+            
             article = {
                 "title": title_text,
-                "description": f"⭐ 评分：{media.get('media_rating')} | � 类型：{type_text} | 📅 日期：{release_date}\n\n📝 内容简介：{media.get('media_intro')}",
+                "description": f"👥 主演：{media.get('media_cast', '未知')}\n📺 类型：{type_text} | ⭐ 评分：{media.get('media_rating')} | {date_label}：{release_date}\n\n📝 内容简介：{media.get('media_intro')}",
                 "url": f"{media.get('media_tmdburl')}",
                 "picurl": f"{media.get('media_still') if media.get('media_type') == 'Episode' else media.get('media_backdrop')}"
             }
@@ -238,6 +245,12 @@ class BarkSender(MessageSender):
     def send_media_details(self, media: dict):
         # 构建剧集信息
         release_date = media.get('media_rel') if media.get('media_rel') else 'Unknown'
+        type_text = media.get("media_genres", "剧集" if media.get("media_type") == "Episode" else "电影")
+        date_label = "📺 首播" if media.get("media_type") == "Episode" else "🎬 上映"
+        
+        # 简短简介（前80字）
+        intro = media.get('media_intro', '')
+        short_intro = intro[:80] + '...' if len(intro) > 80 else intro
         
         if media.get("media_type") == "Episode":
             if media.get("tv_episode_merged"):
@@ -245,12 +258,20 @@ class BarkSender(MessageSender):
             else:
                 episode_info = f"第{media.get('tv_season')}季：第{media.get('tv_episode')}集"
             status_text = "新剧速递"
-            type_text = "剧集"
-            body_text = f"{episode_info} | 新更上线\n⭐ 评分：{media['media_rating']}\n📺 类型：{type_text}\n📅 日期：{release_date}"
+            body_text = f"{episode_info} | 新更上线"
+            if media.get('media_cast'):
+                body_text += f"\n👥 主演：{media['media_cast']}"
+            body_text += f"\n📺 类型：{type_text}\n⭐ 评分：{media['media_rating']}\n{date_label}：{release_date}"
+            if short_intro:
+                body_text += f"\n\n📝 {short_intro}"
         else:
             status_text = "新片速递"
-            type_text = "电影"
-            body_text = f"⭐ 评分：{media['media_rating']}\n📺 类型：{type_text}\n📅 日期：{release_date}"
+            body_text = ""
+            if media.get('media_cast'):
+                body_text += f"👥 主演：{media['media_cast']}\n"
+            body_text += f"📺 类型：{type_text}\n⭐ 评分：{media['media_rating']}\n{date_label}：{release_date}"
+            if short_intro:
+                body_text += f"\n\n📝 {short_intro}"
         
         payload = {
             "title": f"{media.get('server_name')} | {status_text}\n【{media['media_name']}】",

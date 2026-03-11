@@ -1,5 +1,41 @@
 # 更新日志 / Changelog
 
+## [v4.5.0] - 2026-03-11
+
+### 🎨 新增功能 / New Features
+
+#### 主演信息显示
+- 新增主演信息显示，展示前 5 位主演
+- 从 TMDB API 自动获取演员信息
+- 支持 Telegram、WeChat、Bark 三个推送渠道
+
+#### TMDB 类型显示
+- 使用 TMDB 的 Genres 显示更详细的类型信息（如"动作, 冒险, 剧情"）
+- 自动翻译英文类型为中文，包含完整的类型映射表
+- 无类型信息时降级显示"电影"或"剧集"
+
+#### 简介优化
+- Telegram 简介使用引用格式（blockquote），提升视觉层次
+- 单集无简介时自动使用电视剧总简介作为备用
+- Bark 显示简短简介（前 80 字），避免通知过长
+
+#### 日期标签优化
+- 电影显示"🎬 上映"，剧集显示"📺 首播"
+- 更加专业和准确的日期标签
+
+### 🔧 优化 / Improvements
+
+- 优化元数据显示顺序：主演 → 类型 → 评分 → 日期
+- 优化 API 调用，避免重复请求 TMDB
+- 完善错误处理和降级策略
+
+### 📝 技术细节 / Technical Details
+
+- 新增 `tmdb_api.get_movie_credits()` 和 `tmdb_api.get_tv_credits()` 函数
+- 新增 `tmdb_api.translate_genre()` 类型翻译函数
+- 新增 `media_cast` 和 `media_genres` 字段
+- 优化 Episode 类避免重复调用 `get_tv_details`
+
 ## [v4.4.1] - 2026-03-11
 
 ### 🎨 样式优化 / Style Improvements

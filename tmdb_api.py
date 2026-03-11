@@ -22,6 +22,55 @@ TMDB_MEDIA_TYPES = {
 
 TMDB_LANG = "zh-CN"
 
+# 类型英文到中文映射表（备用方案）
+GENRE_TRANSLATION = {
+    "Action": "动作",
+    "Adventure": "冒险",
+    "Animation": "动画",
+    "Comedy": "喜剧",
+    "Crime": "犯罪",
+    "Documentary": "纪录",
+    "Drama": "剧情",
+    "Family": "家庭",
+    "Fantasy": "奇幻",
+    "History": "历史",
+    "Horror": "恐怖",
+    "Music": "音乐",
+    "Mystery": "悬疑",
+    "Romance": "爱情",
+    "Science Fiction": "科幻",
+    "TV Movie": "电视电影",
+    "Thriller": "惊悚",
+    "War": "战争",
+    "Western": "西部",
+    # TV 特有类型
+    "Action & Adventure": "动作冒险",
+    "Sci-Fi & Fantasy": "科幻奇幻",
+    "War & Politics": "战争政治",
+    "News": "新闻",
+    "Reality": "真人秀",
+    "Talk": "脱口秀",
+    "Soap": "肥皂剧",
+    "Kids": "儿童",
+}
+
+
+def translate_genre(genre_name):
+    """
+    将类型名称翻译为中文，如果已经是中文则直接返回
+    
+    Args:
+        genre_name (str): 类型名称（可能是英文或中文）
+    
+    Returns:
+        str: 中文类型名称
+    """
+    # 如果包含中文字符，直接返回
+    if any('\u4e00' <= char <= '\u9fff' for char in genre_name):
+        return genre_name
+    # 否则查找映射表
+    return GENRE_TRANSLATION.get(genre_name, genre_name)
+
 
 def login():
     """
@@ -290,3 +339,52 @@ def get_tv_episode_still_paths(tmdb_id, season_number, episode_number):
         if still:
             return f"{TMDB_IMAGE_DOMAIN}/t/p/w500{still}", None
         return None, f"No stills found for TV {tmdb_id} S{season_number}E{episode_number}."
+
+
+
+def get_movie_credits(tmdb_id):
+    """
+    Fetches the cast information for a movie from TMDB.
+    
+    Args:
+        tmdb_id (str): The TMDB ID of the movie.
+    
+    Returns:
+        tuple: A tuple containing:
+            - cast_list (list): List of top 5 cast members with 'name' field, or None if request fails.
+            - error_message (str): An error message if the request fails, otherwise None.
+    """
+    url = f"{TMDB_API}/movie/{tmdb_id}/credits?language={TMDB_LANG}"
+    try:
+        response = requests.get(url, headers=TMDB_API_HEADERS, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        cast = data.get("cast", [])[:5]  # 获取前5位演员
+        return cast, None
+    except requests.exceptions.RequestException as e:
+        log.logger.error(f"Failed to fetch movie credits for TMDB ID {tmdb_id}: {e}")
+        return None, str(e)
+
+
+def get_tv_credits(tmdb_id):
+    """
+    Fetches the cast information for a TV show from TMDB.
+    
+    Args:
+        tmdb_id (str): The TMDB ID of the TV show.
+    
+    Returns:
+        tuple: A tuple containing:
+            - cast_list (list): List of top 5 cast members with 'name' field, or None if request fails.
+            - error_message (str): An error message if the request fails, otherwise None.
+    """
+    url = f"{TMDB_API}/tv/{tmdb_id}/credits?language={TMDB_LANG}"
+    try:
+        response = requests.get(url, headers=TMDB_API_HEADERS, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        cast = data.get("cast", [])[:5]  # 获取前5位演员
+        return cast, None
+    except requests.exceptions.RequestException as e:
+        log.logger.error(f"Failed to fetch TV credits for TMDB ID {tmdb_id}: {e}")
+        return None, str(e)

@@ -148,6 +148,25 @@ class Movie(IMedia):
         self.media_detail_["media_tmdburl"] = f"https://www.themoviedb.org/movie/{self.info_['ProviderIds']['Tmdb']}?language=zh-CN"
         self.media_detail_["media_poster"] = poster
         self.media_detail_["media_backdrop"] = backdrop
+        
+        # 获取类型信息（genres）
+        genres = movie_details.get("genres", [])
+        if genres:
+            # 取前3个类型并翻译为中文
+            genre_names = [tmdb_api.translate_genre(g["name"]) for g in genres[:3]]
+            self.media_detail_["media_genres"] = ", ".join(genre_names)
+        else:
+            self.media_detail_["media_genres"] = "电影"
+        
+        # 获取演员信息
+        cast, err = tmdb_api.get_movie_credits(self.info_["ProviderIds"]["Tmdb"])
+        if cast:
+            cast_names = [actor["name"] for actor in cast]
+            self.media_detail_["media_cast"] = ", ".join(cast_names)
+        else:
+            log.logger.warning(f"Failed to fetch cast: {err}")
+            self.media_detail_["media_cast"] = ""
+        
         log.logger.debug(self.media_detail_)
 
 
@@ -245,18 +264,60 @@ class Episode(IMedia):
                 log.logger.warning("No air_date found for this episode, will use current year.")
                 tv_details["air_date"] = str(datetime.now().year)
         
+        # 如果单集简介为空，使用电视剧总简介
+        # 同时获取电视剧类型信息（genres）
+        episode_overview = tv_details["overview"]
+        tv_series_details = None
+        
+        if not episode_overview or episode_overview.strip() == "":
+            log.logger.warning("No episode overview found. Try to use TV series overview.")
+            tv_series_details, err = tmdb_api.get_tv_details(self.info_["ProviderIds"]["Tmdb"])
+            if err:
+                log.logger.warning(err)
+                log.logger.warning("No TV series overview found either. Use empty string.")
+                episode_overview = ""
+            else:
+                episode_overview = tv_series_details.get("overview", "")
+                log.logger.info("Using TV series overview as fallback.")
+        
+        # 获取电视剧类型信息（genres）
+        if tv_series_details is None:
+            tv_series_details, err = tmdb_api.get_tv_details(self.info_["ProviderIds"]["Tmdb"])
+        
+        if tv_series_details and not err:
+            genres = tv_series_details.get("genres", [])
+            if genres:
+                # 取前3个类型并翻译为中文
+                genre_names = [tmdb_api.translate_genre(g["name"]) for g in genres[:3]]
+                self.media_detail_["media_genres"] = ", ".join(genre_names)
+            else:
+                self.media_detail_["media_genres"] = "剧集"
+        else:
+            log.logger.warning(f"Failed to fetch TV series details for genres: {err}")
+            self.media_detail_["media_genres"] = "剧集"
+        
         self.media_detail_["media_name"] = self.info_["Name"]
         self.media_detail_["media_type"] = "Episode"
         self.media_detail_["media_tmdbid"] = self.info_["ProviderIds"]["Tmdb"]
         self.media_detail_["media_rating"] = tv_details["vote_average"]
         self.media_detail_["media_rel"] = tv_details["air_date"]
-        self.media_detail_["media_intro"] = tv_details["overview"]
+        self.media_detail_["media_intro"] = episode_overview
         self.media_detail_["media_tmdburl"] = f"https://www.themoviedb.org/tv/{self.info_['ProviderIds']['Tmdb']}?language=zh-CN"
         self.media_detail_["media_poster"] = poster
         self.media_detail_["media_still"] = still
         self.media_detail_["tv_season"] = tv_details["season_number"]
         self.media_detail_["tv_episode"] = tv_details["episode_number"]
         self.media_detail_["tv_episode_name"] = tv_details["name"]
+        
+        # 获取演员信息
+        cast, err = tmdb_api.get_tv_credits(self.info_["ProviderIds"]["Tmdb"])
+        if cast:
+            cast_names = [actor["name"] for actor in cast]
+            self.media_detail_["media_cast"] = ", ".join(cast_names)
+        else:
+            log.logger.warning(f"Failed to fetch cast: {err}")
+            self.media_detail_["media_cast"] = ""
+        
         log.logger.debug(self.media_detail_)
 
 

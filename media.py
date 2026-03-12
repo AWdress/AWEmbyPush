@@ -83,11 +83,12 @@ class IMedia(abc.ABC):
             if len(medias) == 0:
                 log.logger.error(f"No search results found for {self.info_['Name']} {self.info_['PremiereYear']} in TMDB. Cannot proceed.")
                 raise Exception(f"No TMDB results found for {self.info_['Name']}")
+            # Use first search result as fallback
             if self.info_["Type"] == "Movie":
                 log.logger.warn(f"Use the first search result: {medias[0]['title']} {medias[0]['release_date'][:4]}.")
             else:
                 log.logger.warn(f"Use the first search result: {medias[0]['original_name']} {medias[0]['first_air_date'][:4]}.")
-            self.info_["ProviderIds"]["Tmdb"] = medias[0]["id"]
+            self.info_["ProviderIds"]["Tmdb"] = str(medias[0]["id"])
 
 
 class Movie(IMedia):

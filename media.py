@@ -80,6 +80,9 @@ class IMedia(abc.ABC):
                 break
         if "Tmdb" not in self.info_["ProviderIds"]:
             log.logger.warn(f"No matched media found for {self.info_['Name']} {self.info_['PremiereYear']} in TMDB.")
+            if len(medias) == 0:
+                log.logger.error(f"No search results found for {self.info_['Name']} {self.info_['PremiereYear']} in TMDB. Cannot proceed.")
+                raise Exception(f"No TMDB results found for {self.info_['Name']}")
             if self.info_["Type"] == "Movie":
                 log.logger.warn(f"Use the first search result: {medias[0]['title']} {medias[0]['release_date'][:4]}.")
             else:

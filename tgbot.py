@@ -35,7 +35,7 @@ def send_photo(caption, photo):
         "chat_id": TG_CHAT_ID,
         "photo": photo,
         "caption": caption,
-        "parse_mode": "Markdown",
+        "parse_mode": "HTML",
     }
     log.logger.debug(log.SensitiveData(json.dumps(payload, ensure_ascii=False)))
     try:

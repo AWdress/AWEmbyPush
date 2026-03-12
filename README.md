@@ -4,7 +4,7 @@
 
 **优雅的 Emby/Jellyfin 媒体库更新通知服务**
 
-[![GitHub release](https://img.shields.io/badge/release-v4.4.0-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
+[![GitHub release](https://img.shields.io/badge/release-v4.5.1-blue.svg)](https://github.com/AWdress/AWEmbyPush/releases)
 [![Docker](https://img.shields.io/badge/docker-awdress%2Fawembypush-blue.svg)](https://hub.docker.com/r/awdress/awembypush)
 [![Build Status](https://github.com/AWdress/AWEmbyPush/actions/workflows/docker-build.yml/badge.svg)](https://github.com/AWdress/AWEmbyPush/actions)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
@@ -48,9 +48,14 @@
 </tr>
 </table>
 
-### 🆕 最新更新 (v4.4.0)
+### 🆕 最新更新 (v4.5.1)
 
-- 🎨 **Netflix 风格通知** - 全新的通知样式设计
+- � **主演信息显示** - 展示前 5 位主演，让你快速了解演员阵容
+- �🎨 **TMDB 类型显示** - 使用详细的类型标签（如"动作, 冒险, 剧情"），自动中文翻译
+- 📝 **简介优化** - Telegram 使用 HTML blockquote 引用格式（粉色背景 + 左侧竖线）
+- 📅 **日期标签优化** - 电影显示"🎬 上映"，剧集显示"📺 首播"
+- 📊 **元数据垂直显示** - 企业微信卡片和消息元数据改为垂直布局，更清晰易读
+- 🔄 **简介降级策略** - 单集无简介时自动使用电视剧总简介
   - 采用 Netflix 风格的卡片布局，更现代、更专业
   - 宽屏剧照/背景图展示，视觉冲击力更强
   - 优化信息层次，状态提示更清晰（"新剧集已上线"/"新电影已上线"）

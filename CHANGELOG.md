@@ -1,5 +1,19 @@
 # 更新日志 / Changelog
 
+## [v4.5.1] - 2026-03-11
+
+### 🐛 Bug 修复 / Bug Fixes
+
+- 修复所有主演 emoji 显示为 👥
+- 修复企业微信 news_notice 卡片元数据垂直显示
+- 修复企业微信 news 消息元数据垂直显示
+
+### 🎨 样式优化 / Style Improvements
+
+- Telegram 改用 HTML 格式
+- 简介使用 `<blockquote>` 标签实现引用效果（粉色背景 + 左侧竖线）
+- 优化 Telegram 链接和粗体显示
+
 ## [v4.5.0] - 2026-03-11
 
 ### 🎨 新增功能 / New Features

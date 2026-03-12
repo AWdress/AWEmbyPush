@@ -53,8 +53,6 @@ class TelegramSender(MessageSender):
     def send_media_details(self, media: dict):
         # 参考原版样式设计
         server_name = media["server_name"]
-        for ch in ["_", "*", "`", "["]:
-            server_name = server_name.replace(ch, f"\\{ch}")
         
         # 处理剧集信息
         if media["media_type"] == "Episode":
@@ -73,11 +71,11 @@ class TelegramSender(MessageSender):
         date_label = "📺 首播" if media["media_type"] == "Episode" else "🎬 上映"
         
         # 标题部分 - 服务器名称 | 状态
-        caption = f"*{server_name} | {status_text}*\n\n"
+        caption = f"<b>{server_name} | {status_text}</b>\n\n"
         caption += f"─────────────────────\n\n"
         
         # 片名
-        caption += f"*【{media['media_name']}】*\n"
+        caption += f"<b>【{media['media_name']}】</b>\n"
         
         # 剧集信息
         if episode_info:
@@ -93,21 +91,18 @@ class TelegramSender(MessageSender):
         caption += f"{date_label}：{release_date}\n"
         caption += "\n"
         
-        # 简介 - 使用 Markdown 引用格式
+        # 简介 - 使用 HTML blockquote 标签
         if media.get('media_intro'):
-            # 将简介的每一行前面加上 > 符号
-            intro_lines = media['media_intro'].split('\n')
-            quoted_intro = '\n'.join([f">{line}" if line.strip() else ">" for line in intro_lines])
-            caption += f"📝 内容简介：\n{quoted_intro}\n\n"
+            caption += f"📝 内容简介：\n<blockquote>{media['media_intro']}</blockquote>\n\n"
         
         caption += f"─────────────────────\n\n"
         
         # 底部链接
         enable_watch_link = os.getenv("ENABLE_WATCH_LINK", "false").lower() == "true"
         if enable_watch_link:
-            caption += f"▶️ [立即观看]({media['server_url']}) | ℹ️ [了解更多]({media['media_tmdburl']})\n"
+            caption += f"▶️ <a href='{media['server_url']}'>立即观看</a> | ℹ️ <a href='{media['media_tmdburl']}'>了解更多</a>\n"
         else:
-            caption += f"ℹ️ [了解更多]({media['media_tmdburl']})\n"
+            caption += f"ℹ️ <a href='{media['media_tmdburl']}'>了解更多</a>\n"
         
         # 使用剧照（Episode）或背景图（Movie）
         if media["media_type"] == "Episode":

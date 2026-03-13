@@ -11,6 +11,35 @@ import traceback
 Sender = None
 
 
+def build_play_url(media: dict) -> str:
+    """构建媒体播放页面 URL"""
+    server_url = media.get('server_url', '')
+    server_id = media.get('server_id', '')
+    media_id = media.get('media_id', '')
+    server_type = media.get('server_type', 'Emby')
+    
+    # 如果缺少必要信息，返回服务器首页
+    if not server_url or not media_id:
+        return server_url
+    
+    # 移除 URL 末尾的斜杠
+    server_url = server_url.rstrip('/')
+    
+    # Emby 和 Jellyfin 使用不同的 URL 格式
+    if server_type.lower() == 'jellyfin':
+        # Jellyfin: /web/index.html#!/details?id=xxx&serverId=xxx
+        if server_id:
+            return f"{server_url}/web/index.html#!/details?id={media_id}&serverId={server_id}"
+        else:
+            return f"{server_url}/web/index.html#!/details?id={media_id}"
+    else:
+        # Emby: /web/index.html#!/item?id=xxx&serverId=xxx
+        if server_id:
+            return f"{server_url}/web/index.html#!/item?id={media_id}&serverId={server_id}"
+        else:
+            return f"{server_url}/web/index.html#!/item?id={media_id}"
+
+
 class MessageSender:
     def send_welcome(self, welcome: dict):
         raise NotImplementedError
@@ -91,16 +120,19 @@ class TelegramSender(MessageSender):
         caption += f"{date_label}：{release_date}\n"
         caption += "\n"
         
-        # 简介 - 使用 HTML blockquote 标签
+        # 简介 - 使用 HTML blockquote 标签（限制 150 字）
         if media.get('media_intro'):
-            caption += f"📝 内容简介：\n<blockquote>{media['media_intro']}</blockquote>\n\n"
+            intro = media['media_intro']
+            short_intro = intro[:150] + '...' if len(intro) > 150 else intro
+            caption += f"📝 内容简介：\n<blockquote>{short_intro}</blockquote>\n\n"
         
         caption += f"─────────────────────\n\n"
         
         # 底部链接
         enable_watch_link = os.getenv("ENABLE_WATCH_LINK", "false").lower() == "true"
         if enable_watch_link:
-            caption += f"▶️ <a href='{media['server_url']}'>立即观看</a> | ℹ️ <a href='{media['media_tmdburl']}'>了解更多</a>\n"
+            play_url = build_play_url(media)
+            caption += f"▶️ <a href='{play_url}'>立即观看</a> | ℹ️ <a href='{media['media_tmdburl']}'>了解更多</a>\n"
         else:
             caption += f"ℹ️ <a href='{media['media_tmdburl']}'>了解更多</a>\n"
         
@@ -180,17 +212,18 @@ class WechatAppSender(MessageSender):
                     },
                     {
                         "title": "📝 内容简介",
-                        "desc": f"{media.get('media_intro')}",
+                        "desc": f"{media.get('media_intro', '')[:120] + '...' if len(media.get('media_intro', '')) > 120 else media.get('media_intro', '')}",
                     }
                 ],
             }
             
             # 根据开关决定是否添加"立即观看"按钮
             if enable_watch_link:
+                play_url = build_play_url(media)
                 card_details["jump_list"] = [
                     {
                         "type": 1,
-                        "url": f"{media.get('server_url')}",
+                        "url": play_url,
                         "title": "▶️ 立即观看",
                     },
                     {
@@ -199,7 +232,7 @@ class WechatAppSender(MessageSender):
                         "title": "ℹ️ 了解更多",
                     },
                 ]
-                card_details["card_action"] = {"type": 1, "url": f"{media.get('server_url')}"}
+                card_details["card_action"] = {"type": 1, "url": play_url}
             else:
                 card_details["jump_list"] = [
                     {
@@ -219,9 +252,13 @@ class WechatAppSender(MessageSender):
             
             date_label = "📺 首播" if media.get("media_type") == "Episode" else "🎬 上映"
             
+            # 简介限制 100 字
+            intro = media.get('media_intro', '')
+            short_intro = intro[:100] + '...' if len(intro) > 100 else intro
+            
             article = {
                 "title": title_text,
-                "description": f"👥 主演：{media.get('media_cast', '未知')}\n📺 类型：{type_text}\n⭐ 评分：{media.get('media_rating')}\n{date_label}：{release_date}\n\n📝 内容简介：{media.get('media_intro')}",
+                "description": f"👥 主演：{media.get('media_cast', '未知')}\n📺 类型：{type_text}\n⭐ 评分：{media.get('media_rating')}\n{date_label}：{release_date}\n\n📝 内容简介：{short_intro}",
                 "url": f"{media.get('media_tmdburl')}",
                 "picurl": f"{media.get('media_still') if media.get('media_type') == 'Episode' else media.get('media_backdrop')}"
             }

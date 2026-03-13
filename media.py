@@ -32,6 +32,8 @@ class IMedia(abc.ABC):
             "server_type": "Emby/Jellyfin",
             "server_url": "https://emby.example.com",
             "server_name": "My_Emby_Server",
+            "server_id": "server_id_123",
+            "media_id": "item_id_123",
             "media_name": "movie_name",
             "media_type": "Movie/Episode",
             "media_rating": 0.0,
@@ -117,6 +119,8 @@ class Movie(IMedia):
         self.media_detail_["server_type"] = emby_media_info["Server"]["Type"]
         self.media_detail_["server_name"] = emby_media_info["Server"]["Name"]
         self.media_detail_["server_url"] = emby_media_info["Server"]["Url"]
+        self.media_detail_["server_id"] = emby_media_info["Server"].get("Id", "")
+        self.media_detail_["media_id"] = movie_item.get("Id", "")
         log.logger.debug(self.info_)
 
     def send_caption(self):
@@ -206,6 +210,8 @@ class Episode(IMedia):
         self.media_detail_["server_type"] = emby_media_info["Server"]["Type"]
         self.media_detail_["server_name"] = emby_media_info["Server"]["Name"]
         self.media_detail_["server_url"] = emby_media_info["Server"]["Url"]
+        self.media_detail_["server_id"] = emby_media_info["Server"].get("Id", "")
+        self.media_detail_["media_id"] = episode_item.get("Id", "")
         log.logger.debug(self.info_)
 
     def get_details(self):
@@ -370,18 +376,21 @@ def jellyfin_msg_preprocess(msg):
         jellyfin_msg["Server"]["Name"] = original_msg["ServerName"]
         jellyfin_msg["Server"]["Type"] = "Jellyfin"
         jellyfin_msg["Server"]["Url"] = original_msg["ServerUrl"]
+        jellyfin_msg["Server"]["Id"] = original_msg.get("ServerId", "")
         jellyfin_msg["Event"] = "library.new"
 
         if original_msg["ItemType"] == "Movie":
             jellyfin_msg["Title"] = f"新 {original_msg['Name']} 在 {original_msg['ServerName']}"
             jellyfin_msg["Item"]["Type"] = "Movie"
             jellyfin_msg["Item"]["Name"] = original_msg["Name"]
+            jellyfin_msg["Item"]["Id"] = original_msg.get("ItemId", "")
         elif original_msg["ItemType"] == "Episode":
             jellyfin_msg["Title"] = f"新 {original_msg['SeriesName']} S{original_msg['SeasonNumber00']} - E{original_msg['EpisodeNumber00']} 在 {original_msg['ServerName']}"
             jellyfin_msg["Item"]["Type"] = "Episode"
             jellyfin_msg["Item"]["SeriesName"] = original_msg["SeriesName"]
             jellyfin_msg["Item"]["IndexNumber"] = original_msg["EpisodeNumber"]
             jellyfin_msg["Item"]["ParentIndexNumber"] = original_msg["SeasonNumber"]
+            jellyfin_msg["Item"]["Id"] = original_msg.get("ItemId", "")
         else:
             raise Exception("Unsupported media type.")
 
@@ -401,6 +410,9 @@ def jellyfin_msg_preprocess(msg):
         # emby 推送的媒体信息不包含 server url，从环境变量读取或使用默认值
         # 用户可以通过设置 EMBY_SERVER_URL 环境变量来指定自己的 Emby 服务器地址
         original_msg["Server"]["Url"] = os.getenv("EMBY_SERVER_URL", "https://emby.media")
+        # Emby 推送消息中包含 Server.Id，但如果缺失则使用 Item.ServerId
+        if "Id" not in original_msg["Server"] and "ServerId" in original_msg["Item"]:
+            original_msg["Server"]["Id"] = original_msg["Item"]["ServerId"]
         return original_msg
 
 

@@ -1,5 +1,37 @@
 # 更新日志 / Changelog
 
+## [v4.5.2] - 2026-03-13
+
+### ✨ 新增功能 / New Features
+
+- "立即观看"按钮现在跳转到具体影片播放页面，而非服务器首页
+- 自动识别 Emby/Jellyfin 服务器类型，使用对应的 URL 格式
+- 支持电影和剧集的精准跳转
+
+### 🎨 优化 / Improvements
+
+- 限制简介长度，避免通知过长
+  - Telegram: 150 字
+  - 企业微信 news_notice: 120 字
+  - 企业微信 news: 100 字
+  - Bark: 80 字（保持不变）
+
+### 🐛 Bug 修复 / Bug Fixes
+
+- 修复 TMDB 搜索结果为空时的 IndexError 异常
+- 修复 Jellyfin 消息缺少 Server.Id 和 Item.Id
+- 修复 Emby 消息可能缺少 Server.Id 的问题
+- 修复 parse_info 中直接访问字段可能导致的 KeyError
+- 修复 build_play_url 在 server_id 为空时生成错误 URL
+
+### 🔧 技术细节 / Technical Details
+
+- 新增 `build_play_url()` 函数构建播放页面 URL
+- 保存媒体 ID (`media_id`) 和服务器 ID (`server_id`)
+- Emby URL 格式：`/web/index.html#!/item?id=xxx&serverId=xxx`
+- Jellyfin URL 格式：`/web/index.html#!/details?id=xxx&serverId=xxx`
+- 使用 `.get()` 方法安全访问字段，避免 KeyError
+
 ## [v4.5.1] - 2026-03-11
 
 ### 🐛 Bug 修复 / Bug Fixes

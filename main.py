@@ -8,8 +8,8 @@ import sender
 from sender import Sender
 
 AUTHOR = "Awhitedress"
-VERSION = "4.5.2"
-UPDATETIME = "2026-03-13"
+VERSION = "4.5.3"
+UPDATETIME = "2026-03-19"
 DESCRIPTION = "AWEmbyPush 是一个优雅的 Emby/Jellyfin 媒体库更新通知服务"
 REPOSITORY = "https://github.com/AWdress/AWEmbyPush"
 THANKS_TO = "基于 xu4n_ch3n 的 Emby_Notifier 项目"

@@ -309,7 +309,11 @@ class Episode(IMedia):
         self.media_detail_["media_name"] = self.info_["Name"]
         self.media_detail_["media_type"] = "Episode"
         self.media_detail_["media_tmdbid"] = self.info_["ProviderIds"]["Tmdb"]
-        self.media_detail_["media_rating"] = tv_details["vote_average"]
+        # 使用电视剧总评分，而不是单集评分
+        if tv_series_details and tv_series_details.get("vote_average"):
+            self.media_detail_["media_rating"] = tv_series_details["vote_average"]
+        else:
+            self.media_detail_["media_rating"] = tv_details["vote_average"]
         self.media_detail_["media_rel"] = tv_details["air_date"]
         self.media_detail_["media_intro"] = episode_overview
         self.media_detail_["media_tmdburl"] = f"https://www.themoviedb.org/tv/{self.info_['ProviderIds']['Tmdb']}?language=zh-CN"

@@ -153,6 +153,8 @@ class Movie(IMedia):
         self.media_detail_["media_rating"] = movie_details["vote_average"]
         self.media_detail_["media_rel"] = movie_details["release_date"]
         self.media_detail_["media_intro"] = movie_details["overview"]
+        self.media_detail_["media_tmdbid"] = self.info_["ProviderIds"]["Tmdb"]
+        self.media_detail_["media_imdbid"] = self.info_["ProviderIds"].get("Imdb", "")
         self.media_detail_["media_tmdburl"] = f"https://www.themoviedb.org/movie/{self.info_['ProviderIds']['Tmdb']}?language=zh-CN"
         self.media_detail_["media_poster"] = poster
         self.media_detail_["media_backdrop"] = backdrop
@@ -309,6 +311,7 @@ class Episode(IMedia):
         self.media_detail_["media_name"] = self.info_["Name"]
         self.media_detail_["media_type"] = "Episode"
         self.media_detail_["media_tmdbid"] = self.info_["ProviderIds"]["Tmdb"]
+        self.media_detail_["media_imdbid"] = self.info_["ProviderIds"].get("Imdb", "")
         # 使用电视剧总评分，而不是单集评分
         if tv_series_details and tv_series_details.get("vote_average"):
             self.media_detail_["media_rating"] = tv_series_details["vote_average"]

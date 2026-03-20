@@ -12,6 +12,8 @@
 - 修复重复通知根本原因：在 HTTP 层（handle_post）增加请求体哈希去重，30秒内相同请求直接拦截，不再入队
 - 修复微信卡片 `card_image.url` 在图片为 None 时显示 "None" 字符串
 - 修复微信 news `picurl` 字段可能为 None 的问题
+- 修复微信 news description 改为垂直格式显示
+- 修复各渠道简介前缺少"📝 内容简介："标签
 - 移除 Bark `actions` 字段（Bark API 不支持此字段）
 - 修复 Bark `send_test_msg` 中 `split("*")[3]` 可能越界的问题
 - 修复 Bark `send_media_details` 中 `enable_watch_link` 变量未定义就使用的问题

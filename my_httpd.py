@@ -1,8 +1,13 @@
 from aiohttp import web
 import asyncio
 import log, media
-import json, traceback
+import json, traceback, hashlib, time
 import my_utils
+
+# HTTP 层去重：记录最近收到的请求哈希，避免重复入队
+_recent_request_hashes = {}
+_request_hash_lock = asyncio.Lock()
+HTTP_DEDUP_WINDOW = 30  # 秒
 
 
 async def worker(msg_queue):
@@ -33,6 +38,22 @@ async def handle_post(request):
             + "and choose 'application/json' as request content type."
         )
     else:
+        # HTTP 层去重：对请求体做哈希，30秒内相同内容只入队一次
+        req_hash = hashlib.md5(data.encode()).hexdigest()
+        current_time = time.time()
+        async with _request_hash_lock:
+            # 清理过期记录
+            expired = [k for k, v in _recent_request_hashes.items() if current_time - v > HTTP_DEDUP_WINDOW]
+            for k in expired:
+                del _recent_request_hashes[k]
+            
+            if req_hash in _recent_request_hashes:
+                elapsed = current_time - _recent_request_hashes[req_hash]
+                log.logger.warning(f"🚫 HTTP层拦截重复请求（{elapsed:.1f}秒前已入队），忽略本次请求")
+                return web.Response()
+            
+            _recent_request_hashes[req_hash] = current_time
+        
         # 将数据放入队列
         await request.app["msg_queue"].put(data)
 

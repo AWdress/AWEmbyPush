@@ -12,28 +12,52 @@ Sender = None
 
 
 def build_play_url(media: dict) -> str:
-    """构建媒体播放页面 URL"""
+    """构建媒体播放页面 URL，支持 Emby/Jellyfin 直链、Forward App 和 Infuse 协议"""
+    watch_link_type = os.getenv("WATCH_LINK_TYPE", "server").lower()
+    
+    tmdb_id = media.get('media_tmdbid', '')
+    imdb_id = media.get('media_imdbid', '')
+    media_name = media.get('media_name', '')
+    is_episode = media.get('media_type') == "Episode"
+    tv_season = media.get('tv_season', 1)
+    tv_episode = media.get('tv_episode', 1)
+
+    if watch_link_type == "forward":
+        # Forward App: forward://tmdb?id=xxx&type=movie/tv
+        media_type = "tv" if is_episode else "movie"
+        if tmdb_id:
+            return f"forward://tmdb?id={tmdb_id}&type={media_type}"
+        elif imdb_id:
+            return f"forward://imdb?id={imdb_id}"
+        else:
+            return f"forward://search?q={media_name}"
+
+    if watch_link_type == "infuse":
+        # Infuse: infuse://movie/{tmdb_id} 或 infuse://series/{tmdb_id}-{season}-{episode}
+        if tmdb_id:
+            if is_episode:
+                return f"infuse://series/{tmdb_id}-{tv_season}-{tv_episode}"
+            else:
+                return f"infuse://movie/{tmdb_id}"
+        # Infuse 无 TMDB ID 时降级到服务器直链
+    
+    # 默认：Emby/Jellyfin 服务器直链
     server_url = media.get('server_url', '')
     server_id = media.get('server_id', '')
     media_id = media.get('media_id', '')
     server_type = media.get('server_type', 'Emby')
     
-    # 如果缺少必要信息，返回服务器首页
     if not server_url or not media_id:
         return server_url
     
-    # 移除 URL 末尾的斜杠
     server_url = server_url.rstrip('/')
     
-    # Emby 和 Jellyfin 使用不同的 URL 格式
     if server_type.lower() == 'jellyfin':
-        # Jellyfin: /web/index.html#!/details?id=xxx&serverId=xxx
         if server_id:
             return f"{server_url}/web/index.html#!/details?id={media_id}&serverId={server_id}"
         else:
             return f"{server_url}/web/index.html#!/details?id={media_id}"
     else:
-        # Emby: /web/index.html#!/item?id=xxx&serverId=xxx
         if server_id:
             return f"{server_url}/web/index.html#!/item?id={media_id}&serverId={server_id}"
         else:
@@ -189,8 +213,8 @@ class WechatAppSender(MessageSender):
                     "desc": episode_text if episode_text else "新更上线"
                 },
                 "card_image": {
-                    # 使用宽屏图片（剧照或背景图）
-                    "url": f"{media.get('media_still') if media.get('media_type') == 'Episode' else media.get('media_backdrop')}",
+                    # 使用宽屏图片（剧照或背景图），降级到海报
+                    "url": (media.get('media_still') or media.get('media_backdrop') or media.get('media_poster') or "") if media.get('media_type') == 'Episode' else (media.get('media_backdrop') or media.get('media_poster') or ""),
                     "aspect_ratio": 2.25,
                 },
                 "vertical_content_list": [
@@ -258,9 +282,9 @@ class WechatAppSender(MessageSender):
             
             article = {
                 "title": title_text,
-                "description": f"👥 主演：{media.get('media_cast', '未知')}\n📺 类型：{type_text}\n⭐ 评分：{media.get('media_rating')}\n{date_label}：{release_date}\n\n📝 内容简介：{short_intro}",
-                "url": f"{media.get('media_tmdburl')}",
-                "picurl": f"{media.get('media_still') if media.get('media_type') == 'Episode' else media.get('media_backdrop')}"
+                "description": f"👥 主演：{media.get('media_cast', '未知')} | 📺 类型：{type_text} | ⭐ 评分：{media.get('media_rating')} | {date_label}：{release_date}\n\n📝 {short_intro}" + (f"\n\nℹ️ 了解更多：{media.get('media_tmdburl')}" if enable_watch_link else ""),
+                "url": build_play_url(media) if enable_watch_link else f"{media.get('media_tmdburl')}",
+                "picurl": media.get('media_still') or media.get('media_backdrop') or media.get('media_poster') or "" if media.get('media_type') == 'Episode' else media.get('media_backdrop') or media.get('media_poster') or ""
             }
             wxapp.send_news(article)
 
@@ -280,7 +304,8 @@ class BarkSender(MessageSender):
     def send_test_msg(self, test_content: str):
         # test_content: This is a test message from *Aliyun_Shared*!
         # 将*中间的字符串提取出来作为server_name
-        server_name = test_content.split("*")[3]
+        parts = test_content.split("*")
+        server_name = parts[3] if len(parts) > 3 else "Unknown"
         payload = {
             "title": "🎉 AWEmbyPush Test",
             "body": f"恭喜！这是来自 {server_name} 的测试消息！现在您可以尝试向 Emby Server 添加新的媒体内容了~"
@@ -292,6 +317,7 @@ class BarkSender(MessageSender):
         release_date = media.get('media_rel') if media.get('media_rel') else 'Unknown'
         type_text = media.get("media_genres", "剧集" if media.get("media_type") == "Episode" else "电影")
         date_label = "📺 首播" if media.get("media_type") == "Episode" else "🎬 上映"
+        enable_watch_link = os.getenv("ENABLE_WATCH_LINK", "false").lower() == "true"
         
         # 简短简介（前80字）
         intro = media.get('media_intro', '')
@@ -318,12 +344,21 @@ class BarkSender(MessageSender):
             if short_intro:
                 body_text += f"\n\n📝 {short_intro}"
         
-        payload = {
-            "title": f"{media.get('server_name')} | {status_text}\n【{media['media_name']}】",
-            "body": body_text,
-            "icon": f"https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/{media.get('server_type', 'Emby').lower()}.png",
-            "url": f"{media['media_tmdburl']}",
-        }
+        if enable_watch_link:
+            play_url = build_play_url(media)
+            payload = {
+                "title": f"{media.get('server_name')} | {status_text}\n【{media['media_name']}】",
+                "body": body_text,
+                "icon": f"https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/{media.get('server_type', 'Emby').lower()}.png",
+                "url": play_url,
+            }
+        else:
+            payload = {
+                "title": f"{media.get('server_name')} | {status_text}\n【{media['media_name']}】",
+                "body": body_text,
+                "icon": f"https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/{media.get('server_type', 'Emby').lower()}.png",
+                "url": media['media_tmdburl'],
+            }
         bark.send_message(payload)
 
 

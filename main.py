@@ -8,8 +8,8 @@ import sender
 from sender import Sender
 
 AUTHOR = "Awhitedress"
-VERSION = "4.5.3"
-UPDATETIME = "2026-03-19"
+VERSION = "4.5.4"
+UPDATETIME = "2026-03-20"
 DESCRIPTION = "AWEmbyPush 是一个优雅的 Emby/Jellyfin 媒体库更新通知服务"
 REPOSITORY = "https://github.com/AWdress/AWEmbyPush"
 THANKS_TO = "基于 xu4n_ch3n 的 Emby_Notifier 项目"
@@ -81,6 +81,7 @@ def env_check():
     print("\n━━━━━━━━ 🎬 媒体服务器配置 ━━━━━━━━")
     print(f"{'EMBY_SERVER_URL:':<25} {'[可选]':<8} {os.getenv('EMBY_SERVER_URL', 'https://emby.media')}")
     print(f"{'ENABLE_WATCH_LINK:':<25} {'[可选]':<8} {os.getenv('ENABLE_WATCH_LINK', 'false')}")
+    print(f"{'WATCH_LINK_TYPE:':<25} {'[可选]':<8} {os.getenv('WATCH_LINK_TYPE', 'server')} (server/forward/infuse)")
     print("\n━━━━━━━━ 📝 日志配置 ━━━━━━━━")
     print(f"{'LOG_LEVEL:':<25} {'[可选]':<8} {os.getenv('LOG_LEVEL', 'INFO')}")
     print(f"{'LOG_EXPORT:':<25} {'[可选]':<8} {os.getenv('LOG_EXPORT', 'False')}")

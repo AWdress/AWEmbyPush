@@ -1,5 +1,21 @@
 # 更新日志 / Changelog
 
+## [v4.5.4] - 2026-03-20
+
+### ✨ 新增功能 / New Features
+
+- 所有渠道支持"立即观看"和"了解更多"按钮（Bark、微信 news/news_notice、Telegram）
+- Bark 标题支持多行格式（与 Telegram 一致）
+
+### 🐛 Bug 修复 / Bug Fixes
+
+- 修复重复通知根本原因：在 HTTP 层（handle_post）增加请求体哈希去重，30秒内相同请求直接拦截，不再入队
+- 修复微信卡片 `card_image.url` 在图片为 None 时显示 "None" 字符串
+- 修复微信 news `picurl` 字段可能为 None 的问题
+- 移除 Bark `actions` 字段（Bark API 不支持此字段）
+- 修复 Bark `send_test_msg` 中 `split("*")[3]` 可能越界的问题
+- 修复 Bark `send_media_details` 中 `enable_watch_link` 变量未定义就使用的问题
+
 ## [v4.5.3] - 2026-03-19
 
 ### 🐛 Bug 修复 / Bug Fixes

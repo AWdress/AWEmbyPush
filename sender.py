@@ -282,7 +282,7 @@ class WechatAppSender(MessageSender):
             
             article = {
                 "title": title_text,
-                "description": f"👥 主演：{media.get('media_cast', '未知')} | 📺 类型：{type_text} | ⭐ 评分：{media.get('media_rating')} | {date_label}：{release_date}\n\n📝 {short_intro}" + (f"\n\nℹ️ 了解更多：{media.get('media_tmdburl')}" if enable_watch_link else ""),
+                "description": f"👥 主演：{media.get('media_cast', '未知')}\n📺 类型：{type_text}\n⭐ 评分：{media.get('media_rating')}\n{date_label}：{release_date}\n\n📝 内容简介：{short_intro}" + (f"\n\nℹ️ 了解更多：{media.get('media_tmdburl')}" if enable_watch_link else ""),
                 "url": build_play_url(media) if enable_watch_link else f"{media.get('media_tmdburl')}",
                 "picurl": media.get('media_still') or media.get('media_backdrop') or media.get('media_poster') or "" if media.get('media_type') == 'Episode' else media.get('media_backdrop') or media.get('media_poster') or ""
             }
@@ -334,7 +334,7 @@ class BarkSender(MessageSender):
                 body_text += f"\n👥 主演：{media['media_cast']}"
             body_text += f"\n📺 类型：{type_text}\n⭐ 评分：{media['media_rating']}\n{date_label}：{release_date}"
             if short_intro:
-                body_text += f"\n\n📝 {short_intro}"
+                body_text += f"\n\n📝 内容简介：{short_intro}"
         else:
             status_text = "新片速递"
             body_text = ""
@@ -342,7 +342,7 @@ class BarkSender(MessageSender):
                 body_text += f"👥 主演：{media['media_cast']}\n"
             body_text += f"📺 类型：{type_text}\n⭐ 评分：{media['media_rating']}\n{date_label}：{release_date}"
             if short_intro:
-                body_text += f"\n\n📝 {short_intro}"
+                body_text += f"\n\n📝 内容简介：{short_intro}"
         
         if enable_watch_link:
             play_url = build_play_url(media)

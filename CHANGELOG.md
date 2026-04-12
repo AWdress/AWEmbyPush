@@ -1,5 +1,13 @@
 # 更新日志 / Changelog
 
+## [v4.5.5] - 2026-04-12
+
+### 🐛 Bug 修复 / Bug Fixes
+
+- 修复电影和电视剧入库重复推送的 bug
+- 改进消息指纹去重策略：电影用 ProviderIds（TMDB/IMDB ID），电视剧用 SeriesName + 季 + 集，不再依赖不稳定的 Webhook Title 字段
+- 新增发送层去重机制（`_sent_records`），基于 TMDB ID 在真正推送前做最终拦截（5分钟窗口，可通过 `SEND_DEDUP_WINDOW` 环境变量配置）
+
 ## [v4.5.4] - 2026-03-20
 
 ### ✨ 新增功能 / New Features

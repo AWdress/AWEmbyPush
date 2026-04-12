@@ -428,8 +428,24 @@ def process_media(emby_media_info):
     if not emby_media_info:
         return
     
-    # 生成消息指纹用于去重
-    fingerprint = f"{emby_media_info['Title']}_{emby_media_info.get('Event', 'unknown')}"
+    # 生成消息指纹用于去重（基于媒体身份信息，而非不稳定的 Title 字段）
+    item = emby_media_info.get('Item', {})
+    event = emby_media_info.get('Event', 'unknown')
+    provider_ids = item.get('ProviderIds', {})
+
+    if item.get('Type') == 'Movie':
+        # 电影：优先用 TMDB/IMDB ID（不会因元数据刷新而改变），回退到 Name
+        media_id = provider_ids.get('Tmdb') or provider_ids.get('Imdb') or item.get('Name', '')
+        fingerprint = f"movie_{media_id}_{event}"
+    elif item.get('Type') == 'Episode':
+        # 电视剧：用 SeriesName + 季 + 集（最稳定的组合）
+        series_name = item.get('SeriesName', item.get('Name', ''))
+        season = item.get('ParentIndexNumber', '')
+        episode_num = item.get('IndexNumber', '')
+        fingerprint = f"episode_{series_name}_{season}_{episode_num}_{event}"
+    else:
+        fingerprint = f"{emby_media_info.get('Title', '')}_{event}"
+
     current_time = time.time()
     
     with _fingerprint_lock:

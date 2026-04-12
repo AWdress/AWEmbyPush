@@ -11,6 +11,9 @@ from typing import Dict, List
 # 缓存时间：30秒
 CACHE_TIMEOUT = int(os.getenv("EPISODE_CACHE_TIMEOUT", "30"))
 
+# 发送层去重窗口：5分钟（防止指纹层被突破后重复推送）
+SEND_DEDUP_WINDOW = int(os.getenv("SEND_DEDUP_WINDOW", "300"))
+
 
 class EpisodeCache:
     """电视剧集缓存管理器，用于合并同一电视剧的多集推送"""
@@ -19,6 +22,7 @@ class EpisodeCache:
         self.cache: Dict[str, List[dict]] = {}  # key: tv_show_id, value: [episodes]
         self.timers: Dict[str, threading.Timer] = {}
         self.lock = threading.Lock()
+        self._sent_records: Dict[str, float] = {}  # key: send_key, value: timestamp
     
     def _get_cache_key(self, media_detail: dict) -> str:
         """生成缓存键：TMDB_ID + 季数"""
@@ -26,6 +30,26 @@ class EpisodeCache:
             return None
         # 使用 TMDB ID + 季数作为唯一标识
         return f"{media_detail.get('media_tmdbid')}_{media_detail.get('tv_season')}"
+    
+    def _get_send_key(self, media_detail: dict) -> str:
+        """生成发送去重键：基于 TMDB ID + 媒体类型 + 季集信息"""
+        if media_detail.get("media_type") == "Episode":
+            return f"episode_{media_detail.get('media_tmdbid')}_{media_detail.get('tv_season')}_{media_detail.get('tv_episode')}"
+        else:
+            return f"movie_{media_detail.get('media_tmdbid')}"
+    
+    def _is_recently_sent(self, send_key: str) -> bool:
+        """检查该媒体是否在去重窗口内已发送过"""
+        current_time = time.time()
+        # 清理过期记录
+        expired = [k for k, v in self._sent_records.items() if current_time - v > SEND_DEDUP_WINDOW]
+        for k in expired:
+            del self._sent_records[k]
+        return send_key in self._sent_records
+    
+    def _record_sent(self, send_key: str):
+        """记录已发送的媒体"""
+        self._sent_records[send_key] = time.time()
     
     def _merge_and_send(self, cache_key: str):
         """合并并发送缓存的剧集"""
@@ -42,8 +66,13 @@ class EpisodeCache:
             
             # 如果只有一集，直接发送
             if len(episodes) == 1:
+                send_key = self._get_send_key(episodes[0])
+                if self._is_recently_sent(send_key):
+                    log.logger.info(f"🚫 发送层拦截重复推送：{episodes[0].get('media_name')} S{episodes[0].get('tv_season')}E{episodes[0].get('tv_episode')}")
+                    return
                 log.logger.info(f"📺 发送单集：{episodes[0].get('media_name')} S{episodes[0].get('tv_season')}E{episodes[0].get('tv_episode')}")
                 sender.Sender.send_media_details(episodes[0])
+                self._record_sent(send_key)
                 return
             
             # 多集合并发送
@@ -61,11 +90,19 @@ class EpisodeCache:
             # 去重后如果只有一集，按单集发送，避免出现"共1集"的合并展示
             if len(episodes_dedup) == 1:
                 single = episodes_dedup[0]
+                send_key = self._get_send_key(single)
+                if self._is_recently_sent(send_key):
+                    log.logger.info(
+                        f"🚫 发送层拦截重复推送：{single.get('media_name')} "
+                        f"S{single.get('tv_season')}E{single.get('tv_episode')}"
+                    )
+                    return
                 log.logger.info(
                     f"📺 发送单集：{single.get('media_name')} "
                     f"S{single.get('tv_season')}E{single.get('tv_episode')}"
                 )
                 sender.Sender.send_media_details(single)
+                self._record_sent(send_key)
                 return
             
             episode_numbers = [ep.get('tv_episode') for ep in episodes_dedup]
@@ -93,19 +130,36 @@ class EpisodeCache:
             merged_media['tv_episode_count'] = len(episodes_dedup)
             merged_media['tv_episode_continuous'] = is_continuous
             
+            # 检查是否所有集都已发送过
+            unsent_episodes = [ep for ep in episodes_dedup if not self._is_recently_sent(self._get_send_key(ep))]
+            if not unsent_episodes:
+                log.logger.info(
+                    f"🚫 发送层拦截重复推送：{merged_media.get('media_name')} "
+                    f"S{merged_media.get('tv_season')} 第{episode_range}集（全部已发送过）"
+                )
+                return
+            
             log.logger.info(
                 f"📺 合并发送 {len(episodes_dedup)} 集：{merged_media.get('media_name')} "
                 f"S{merged_media.get('tv_season')} 第{episode_range}集"
             )
             
             sender.Sender.send_media_details(merged_media)
+            # 记录所有已发送的集
+            for ep in episodes_dedup:
+                self._record_sent(self._get_send_key(ep))
     
     def add_episode(self, media_detail: dict):
         """添加剧集到缓存"""
         # 如果不是电视剧，直接发送
         if media_detail.get("media_type") != "Episode":
+            send_key = self._get_send_key(media_detail)
+            if self._is_recently_sent(send_key):
+                log.logger.info(f"🚫 发送层拦截重复推送（电影）：{media_detail.get('media_name')}")
+                return
             log.logger.info(f"🎬 发送电影：{media_detail.get('media_name')}")
             sender.Sender.send_media_details(media_detail)
+            self._record_sent(send_key)
             return
         
         cache_key = self._get_cache_key(media_detail)

@@ -29,7 +29,7 @@ def send_message(text):
         raise e
 
 
-def send_photo(caption, photo):
+def send_photo(caption, photo, reply_markup=None):
     payload = {
         "method": "sendPhoto",
         "chat_id": TG_CHAT_ID,
@@ -37,6 +37,8 @@ def send_photo(caption, photo):
         "caption": caption,
         "parse_mode": "HTML",
     }
+    if reply_markup:
+        payload["reply_markup"] = reply_markup
     log.logger.debug(log.SensitiveData(json.dumps(payload, ensure_ascii=False)))
     try:
         res = requests.post(TG_BOT_URL, json=payload)

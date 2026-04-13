@@ -1,5 +1,11 @@
 # 更新日志 / Changelog
 
+## [v4.5.6] - 2026-04-13
+
+### 🎨 优化 / Improvements
+
+- Telegram "立即观看"和"了解更多"从 HTML 链接改为 inline keyboard button（底部按钮样式）
+
 ## [v4.5.5] - 2026-04-12
 
 ### 🐛 Bug 修复 / Bug Fixes

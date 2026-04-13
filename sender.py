@@ -150,15 +150,16 @@ class TelegramSender(MessageSender):
             short_intro = intro[:150] + '...' if len(intro) > 150 else intro
             caption += f"📝 内容简介：\n<blockquote>{short_intro}</blockquote>\n\n"
         
-        caption += f"─────────────────────\n\n"
+        caption += f"─────────────────────"
         
-        # 底部链接
+        # 底部按钮
         enable_watch_link = os.getenv("ENABLE_WATCH_LINK", "false").lower() == "true"
+        buttons = []
         if enable_watch_link:
             play_url = build_play_url(media)
-            caption += f"▶️ <a href='{play_url}'>立即观看</a> | ℹ️ <a href='{media['media_tmdburl']}'>了解更多</a>\n"
-        else:
-            caption += f"ℹ️ <a href='{media['media_tmdburl']}'>了解更多</a>\n"
+            buttons.append({"text": "▶️ 立即观看", "url": play_url})
+        buttons.append({"text": "ℹ️ 了解更多", "url": media['media_tmdburl']})
+        reply_markup = {"inline_keyboard": [buttons]}
         
         # 使用剧照（Episode）或背景图（Movie）
         if media["media_type"] == "Episode":
@@ -166,7 +167,7 @@ class TelegramSender(MessageSender):
         else:
             photo = media.get("media_backdrop") or media.get("media_poster")
         
-        tgbot.send_photo(caption, photo)
+        tgbot.send_photo(caption, photo, reply_markup=reply_markup)
 
 
 class WechatAppSender(MessageSender):

@@ -2,6 +2,7 @@ from aiohttp import web
 import asyncio
 import log, media
 import json, traceback, hashlib, time
+from urllib.parse import unquote
 import my_utils
 
 # HTTP 层去重：记录最近收到的请求哈希，避免重复入队
@@ -61,6 +62,21 @@ async def handle_post(request):
     return web.Response()
 
 
+async def handle_redirect(request):
+    """HTTP 302 跳转端点：将 infuse:// / forward:// 等自定义协议包装成 http 链接
+    用法：GET /open?url=<URL编码后的目标地址>
+    """
+    encoded = request.query.get("url", "").strip()
+    if not encoded:
+        return web.Response(status=400, text="Missing url parameter")
+    target = unquote(encoded)
+    # 只允许跳转到合法协议，防止开放重定向滥用
+    allowed = ("http://", "https://", "infuse://", "forward://", "emby://", "jellyfin://")
+    if not target.startswith(allowed):
+        return web.Response(status=400, text="Unsupported target scheme")
+    return web.Response(status=302, headers={"Location": target})
+
+
 async def my_httpd():
     # 创建消息队列
     msg_queue = asyncio.Queue()
@@ -71,6 +87,7 @@ async def my_httpd():
 
     # 添加路由，自定义 post 处理函数
     app.router.add_post("/", handle_post)
+    app.router.add_get("/open", handle_redirect)
 
     # 创建 worker 任务协程
     worker_task = asyncio.create_task(worker(msg_queue))

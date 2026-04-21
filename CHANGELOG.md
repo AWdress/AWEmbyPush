@@ -1,5 +1,14 @@
 # 更新日志 / Changelog
 
+## [v4.5.7] - 2026-04-21
+
+### ✨ 新增功能 / New Features
+
+- 新增 `REDIRECT_BASE_URL` 环境变量，用于将 `infuse://` / `forward://` 协议链接转换为 HTTP 302 中转链接（微信卡片、Bark 均需要 http/https）
+- 新增内置 `GET /open?url=xxx` HTTP 302 端点，可直接使用 AWEmbyPush 自身地址做中转服务器
+- 微信（news_notice / news）和 Bark 的“立即观看”按鈕自动处理非 HTTP 链接：配置了 `REDIRECT_BASE_URL` 则包装成中转链接；未配置则 Bark 直接使用原始协议（iOS 原生支持），微信降级到 TMDB 链接
+- Telegram inline button 同样支持中转（非 http/https 链接自动包装成按鈕；无中转地址时降级展示为文字）
+
 ## [v4.5.6] - 2026-04-13
 
 ### 🎨 优化 / Improvements

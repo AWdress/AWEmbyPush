@@ -7,6 +7,7 @@ import wxapp
 import tgbot
 import bark
 import traceback
+from urllib.parse import quote as _url_quote
 
 Sender = None
 
@@ -62,6 +63,19 @@ def build_play_url(media: dict) -> str:
             return f"{server_url}/web/index.html#!/item?id={media_id}&serverId={server_id}"
         else:
             return f"{server_url}/web/index.html#!/item?id={media_id}"
+
+
+def build_redirect_url(raw_url: str) -> str:
+    """将 infuse:// / forward:// 等自定义协议 URL 包装成 HTTP 302 中转链接。
+    需要配置环境变量 REDIRECT_BASE_URL，指向 AWEmbyPush 服务的公网/局域网地址，
+    例如：http://192.168.1.100:8000
+    包装后的链接形如：http://192.168.1.100:8000/open?url=infuse%3A%2F%2F...
+    """
+    base = os.getenv("REDIRECT_BASE_URL", "").rstrip("/")
+    if not base:
+        return ""
+    encoded = _url_quote(raw_url, safe="")
+    return f"{base}/open?url={encoded}"
 
 
 class MessageSender:
@@ -157,7 +171,15 @@ class TelegramSender(MessageSender):
         buttons = []
         if enable_watch_link:
             play_url = build_play_url(media)
-            buttons.append({"text": "▶️ 立即观看", "url": play_url})
+            if play_url.startswith(("http://", "https://")):
+                safe_play_url = play_url
+            else:
+                safe_play_url = build_redirect_url(play_url)
+            if safe_play_url:
+                buttons.append({"text": "▶️ 立即观看", "url": safe_play_url})
+            else:
+                # 没有配置 REDIRECT_BASE_URL，降级把原始协议链接以文字形式附在正文末尾
+                caption += f"\n\n▶️ 立即观看\uFF1A{play_url}"
         buttons.append({"text": "ℹ️ 了解更多", "url": media['media_tmdburl']})
         reply_markup = {"inline_keyboard": [buttons]}
         
@@ -243,30 +265,26 @@ class WechatAppSender(MessageSender):
             }
             
             # 根据开关决定是否添加"立即观看"按钮
+            tmdb_url = media.get('media_tmdburl', '') or ''
             if enable_watch_link:
                 play_url = build_play_url(media)
-                card_details["jump_list"] = [
-                    {
-                        "type": 1,
-                        "url": play_url,
-                        "title": "▶️ 立即观看",
-                    },
-                    {
-                        "type": 1,
-                        "url": f"{media.get('media_tmdburl')}",
-                        "title": "ℹ️ 了解更多",
-                    },
-                ]
-                card_details["card_action"] = {"type": 1, "url": play_url}
+                if play_url.startswith(("http://", "https://")):
+                    safe_play_url = play_url
+                else:
+                    safe_play_url = build_redirect_url(play_url)
+                if safe_play_url:
+                    card_details["jump_list"] = [
+                        {"type": 1, "url": safe_play_url, "title": "▶️ 立即观看"},
+                        {"type": 1, "url": tmdb_url, "title": "ℹ️ 了解更多"},
+                    ]
+                    card_details["card_action"] = {"type": 1, "url": safe_play_url}
+                else:
+                    # 未配置 REDIRECT_BASE_URL，降级到 TMDB 链接
+                    card_details["jump_list"] = [{"type": 1, "url": tmdb_url, "title": "ℹ️ 了解更多"}]
+                    card_details["card_action"] = {"type": 1, "url": tmdb_url}
             else:
-                card_details["jump_list"] = [
-                    {
-                        "type": 1,
-                        "url": f"{media.get('media_tmdburl')}",
-                        "title": "ℹ️ 了解更多",
-                    },
-                ]
-                card_details["card_action"] = {"type": 1, "url": f"{media.get('media_tmdburl')}"}
+                card_details["jump_list"] = [{"type": 1, "url": tmdb_url, "title": "ℹ️ 了解更多"}]
+                card_details["card_action"] = {"type": 1, "url": tmdb_url}
             
             wxapp.send_news_notice(card_details)
         elif msgtype == "news":
@@ -284,7 +302,7 @@ class WechatAppSender(MessageSender):
             article = {
                 "title": title_text,
                 "description": f"👥 主演：{media.get('media_cast', '未知')}\n📺 类型：{type_text}\n⭐ 评分：{media.get('media_rating')}\n{date_label}：{release_date}\n\n📝 内容简介：{short_intro}" + (f"\n\nℹ️ 了解更多：{media.get('media_tmdburl')}" if enable_watch_link else ""),
-                "url": build_play_url(media) if enable_watch_link else f"{media.get('media_tmdburl')}",
+                "url": (lambda p: p if p.startswith(("http://", "https://")) else (build_redirect_url(p) or media.get('media_tmdburl', '')))(build_play_url(media)) if enable_watch_link else media.get('media_tmdburl', ''),
                 "picurl": media.get('media_still') or media.get('media_backdrop') or media.get('media_poster') or "" if media.get('media_type') == 'Episode' else media.get('media_backdrop') or media.get('media_poster') or ""
             }
             wxapp.send_news(article)
@@ -347,19 +365,19 @@ class BarkSender(MessageSender):
         
         if enable_watch_link:
             play_url = build_play_url(media)
-            payload = {
-                "title": f"{media.get('server_name')} | {status_text}\n【{media['media_name']}】",
-                "body": body_text,
-                "icon": f"https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/{media.get('server_type', 'Emby').lower()}.png",
-                "url": play_url,
-            }
+            if play_url.startswith(("http://", "https://")):
+                url_target = play_url
+            else:
+                # 尝试用 302 中转；未配置 REDIRECT_BASE_URL 时直接传入原始协议（iOS Bark 支持自定义协议）
+                url_target = build_redirect_url(play_url) or play_url
         else:
-            payload = {
-                "title": f"{media.get('server_name')} | {status_text}\n【{media['media_name']}】",
-                "body": body_text,
-                "icon": f"https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/{media.get('server_type', 'Emby').lower()}.png",
-                "url": media['media_tmdburl'],
-            }
+            url_target = media.get('media_tmdburl', '')
+        payload = {
+            "title": f"{media.get('server_name')} | {status_text}\n【{media['media_name']}】",
+            "body": body_text,
+            "icon": f"https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/{media.get('server_type', 'Emby').lower()}.png",
+            "url": url_target,
+        }
         bark.send_message(payload)
 
 

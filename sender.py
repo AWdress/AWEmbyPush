@@ -66,16 +66,28 @@ def build_play_url(media: dict) -> str:
 
 
 def build_redirect_url(raw_url: str) -> str:
-    """将 infuse:// / forward:// 等自定义协议 URL 包装成 HTTP 302 中转链接。
-    需要配置环境变量 REDIRECT_BASE_URL，指向 AWEmbyPush 服务的公网/局域网地址，
-    例如：http://192.168.1.100:8000
-    包装后的链接形如：http://192.168.1.100:8000/open?url=infuse%3A%2F%2F...
+    """将 infuse:// / forward:// 等自定义协议 URL 包装成 HTTP 跳转链接。
+
+    优先使用 LINK_REDIRECT_PREFIX 环境变量（支持 {url} 占位符），例如：
+        https://jump.example.com/go.php?to={url}
+    若未配置，则降级使用 REDIRECT_BASE_URL 指向内置 /open 端点，例如：
+        http://192.168.1.100:8000  →  http://192.168.1.100:8000/open?url={encoded}
+    两者均未配置则返回空字符串。
     """
-    base = os.getenv("REDIRECT_BASE_URL", "").rstrip("/")
-    if not base:
-        return ""
     encoded = _url_quote(raw_url, safe="")
-    return f"{base}/open?url={encoded}"
+
+    prefix = os.getenv("LINK_REDIRECT_PREFIX", "").strip()
+    if prefix and prefix.startswith(("http://", "https://")):
+        if "{url}" in prefix:
+            return prefix.replace("{url}", encoded)
+        sep = "&" if "?" in prefix else "?"
+        return f"{prefix}{sep}url={encoded}"
+
+    base = os.getenv("REDIRECT_BASE_URL", "").rstrip("/")
+    if base:
+        return f"{base}/open?url={encoded}"
+
+    return ""
 
 
 class MessageSender:

@@ -74,6 +74,8 @@ def build_redirect_url(raw_url: str) -> str:
         http://192.168.1.100:8000  →  http://192.168.1.100:8000/open?url={encoded}
     两者均未配置则返回空字符串。
     """
+    if not raw_url:
+        return ""
     encoded = _url_quote(raw_url, safe="")
 
     prefix = os.getenv("LINK_REDIRECT_PREFIX", "").strip()
@@ -183,15 +185,16 @@ class TelegramSender(MessageSender):
         buttons = []
         if enable_watch_link:
             play_url = build_play_url(media)
-            if play_url.startswith(("http://", "https://")):
-                safe_play_url = play_url
-            else:
-                safe_play_url = build_redirect_url(play_url)
-            if safe_play_url:
-                buttons.append({"text": "▶️ 立即观看", "url": safe_play_url})
-            else:
-                # 没有配置 REDIRECT_BASE_URL，降级把原始协议链接以文字形式附在正文末尾
-                caption += f"\n\n▶️ 立即观看\uFF1A{play_url}"
+            if play_url:
+                if play_url.startswith(("http://", "https://")):
+                    safe_play_url = play_url
+                else:
+                    safe_play_url = build_redirect_url(play_url)
+                if safe_play_url:
+                    buttons.append({"text": "▶️ 立即观看", "url": safe_play_url})
+                else:
+                    # 没有配置 REDIRECT_BASE_URL，降级把原始协议链接以文字形式附在正文末尾
+                    caption += f"\n\n▶️ 立即观看\uFF1A{play_url}"
         buttons.append({"text": "ℹ️ 了解更多", "url": media['media_tmdburl']})
         reply_markup = {"inline_keyboard": [buttons]}
         
@@ -280,10 +283,12 @@ class WechatAppSender(MessageSender):
             tmdb_url = media.get('media_tmdburl', '') or ''
             if enable_watch_link:
                 play_url = build_play_url(media)
-                if play_url.startswith(("http://", "https://")):
-                    safe_play_url = play_url
-                else:
-                    safe_play_url = build_redirect_url(play_url)
+                safe_play_url = ""
+                if play_url:
+                    if play_url.startswith(("http://", "https://")):
+                        safe_play_url = play_url
+                    else:
+                        safe_play_url = build_redirect_url(play_url)
                 if safe_play_url:
                     card_details["jump_list"] = [
                         {"type": 1, "url": safe_play_url, "title": "▶️ 立即观看"},
@@ -377,11 +382,14 @@ class BarkSender(MessageSender):
         
         if enable_watch_link:
             play_url = build_play_url(media)
-            if play_url.startswith(("http://", "https://")):
-                url_target = play_url
+            if play_url:
+                if play_url.startswith(("http://", "https://")):
+                    url_target = play_url
+                else:
+                    # 尝试用 302 中转；未配置中转地址时直接传入原始协议（iOS Bark 支持自定义协议）
+                    url_target = build_redirect_url(play_url) or play_url
             else:
-                # 尝试用 302 中转；未配置 REDIRECT_BASE_URL 时直接传入原始协议（iOS Bark 支持自定义协议）
-                url_target = build_redirect_url(play_url) or play_url
+                url_target = media.get('media_tmdburl', '')
         else:
             url_target = media.get('media_tmdburl', '')
         payload = {

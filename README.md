@@ -255,6 +255,9 @@ docker-compose up -d
 | `EPISODE_CACHE_TIMEOUT` | 🆕 电视剧集缓存时间（秒） | `30` |
 | `MESSAGE_DEDUP_WINDOW` | 🆕 消息去重时间窗口（秒） | `60` |
 | `ENABLE_WATCH_LINK` | 🆕 启用"立即观看"按钮 | `false` |
+| `WATCH_LINK_TYPE` | 🆕 播放链接类型 | `server` |
+| `LINK_REDIRECT_PREFIX` | 🆕 自定义跳转服务（支持 `{url}` 占位符） | - |
+| `REDIRECT_BASE_URL` | 🆕 内置 302 中转地址（备选） | - |
 | `EMBY_SERVER_URL` | 🆕 Emby 服务器地址 | `https://emby.media` |
 
 <details>
@@ -265,14 +268,37 @@ docker-compose up -d
 
 **Netflix 风格配置**
 - `ENABLE_WATCH_LINK`: 控制是否显示"立即观看"按钮（默认关闭，避免暴露服务器地址）
+- `WATCH_LINK_TYPE`: 播放链接类型，支持以下三种：
+  - `server`（默认）：Emby/Jellyfin 服务器直链
+  - `infuse`：生成 `infuse://` 协议链接，需配合 Infuse App 使用
+  - `forward`：生成 `forward://` 协议链接，需配合 Forward App 使用
 - `EMBY_SERVER_URL`: Emby 用户需要配置服务器地址（Jellyfin 自动获取）
+
+**Infuse / Forward 跳转配置**
+
+当 `WATCH_LINK_TYPE=infuse` 或 `forward` 时，链接为自定义协议（`infuse://`、`forward://`），微信和 Telegram inline button 只支持 `http/https`，需要配置中转服务：
+
+- **推荐**：设置 `LINK_REDIRECT_PREFIX`，使用自己的跳转服务，支持 `{url}` 占位符（同时隐藏内网地址）：
+  ```bash
+  LINK_REDIRECT_PREFIX=https://jump.example.com/go.php?to={url}
+  ```
+- **备选**：设置 `REDIRECT_BASE_URL`，使用 AWEmbyPush 内置的 `/open` 302 端点（会暴露服务地址）：
+  ```bash
+  REDIRECT_BASE_URL=http://192.168.1.100:8000
+  ```
+- **未配置时**：Bark 直接传入原始协议（iOS 原生支持），微信降级到 TMDB 链接，Telegram 降级为正文文字
 
 **示例**：
 ```bash
-# 开启"立即观看"按钮（Jellyfin 用户）
+# Infuse + 自定义跳转服务（推荐，不暴露内网地址）
+ENABLE_WATCH_LINK=true
+WATCH_LINK_TYPE=infuse
+LINK_REDIRECT_PREFIX=https://jump.example.com/go.php?to={url}
+
+# 开启"立即观看"按钮（Jellyfin 服务器直链）
 ENABLE_WATCH_LINK=true
 
-# 开启"立即观看"按钮（Emby 用户）
+# 开启"立即观看"按钮（Emby 服务器直链）
 ENABLE_WATCH_LINK=true
 EMBY_SERVER_URL=https://your-emby-server.com:8096
 ```
